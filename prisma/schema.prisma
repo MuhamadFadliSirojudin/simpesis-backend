@@ -1,0 +1,65 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "sqlite"
+    url      = "file:./dev.db"
+}
+
+model guru {
+    id         Int      @id @default(autoincrement())
+    username   String   @unique
+    password   String
+    created_at DateTime @default(now())
+
+}
+
+model siswa {
+    id       Int    @id @default(autoincrement())
+    nama     String
+    semester Int
+    kelompok String
+
+    nilai nilai[]
+}
+
+model modul {
+    id           Int    @id @default(autoincrement())
+    penyusun     String
+    topik        String
+    nip          String
+    tujuan       String
+
+    modul pembelajaran[]
+
+    nilai    nilai[]
+}
+
+model pembelajaran {
+    id       Int    @id @default(autoincrement())
+    modul_id Int
+    nama     String
+
+    modul modul   @relation(fields: [modul_id], references: [id])
+    nilai nilai[]
+}
+
+model nilai {
+    id              Int   @id @default(autoincrement())
+    id_pembelajaran Int
+    id_siswa        Int
+    id_modul        Int
+    foto_karya      Bytes
+    nilai           Int
+
+    pembelajaran pembelajaran @relation(fields: [id_pembelajaran], references: [id])
+    modul        modul        @relation(fields: [id_modul], references: [id])
+    siswa        siswa        @relation(fields: [id_siswa], references: [id])
+}
