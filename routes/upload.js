@@ -1,6 +1,7 @@
+// routes/upload.js
 import express from "express";
 import multer from "multer";
-import prisma from "../lib/db.js";
+import prisma from "../lib/db.js"; // pastikan path ini benar
 
 const router = express.Router();
 
@@ -8,7 +9,7 @@ const router = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-router.post("/upload", upload.single("file"), async (req, res) => {
+router.post("/", upload.single("file"), async (req, res) => {
   try {
     const file = req.file;
 
@@ -16,7 +17,6 @@ router.post("/upload", upload.single("file"), async (req, res) => {
       return res.status(400).json({ message: "No file uploaded." });
     }
 
-    // Simpan file ke database (tabel Upload)
     const saved = await prisma.upload.create({
       data: {
         filename: file.originalname,
