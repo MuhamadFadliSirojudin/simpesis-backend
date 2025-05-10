@@ -63,3 +63,11 @@ model nilai {
     modul        modul        @relation(fields: [id_modul], references: [id])
     siswa        siswa        @relation(fields: [id_siswa], references: [id])
 }
+
+model Upload {
+  id        Int      @id @default(autoincrement())
+  filename  String
+  mimetype  String
+  data      Bytes
+  createdAt DateTime @default(now())
+}

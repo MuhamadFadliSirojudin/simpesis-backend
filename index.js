@@ -5,6 +5,7 @@ import siswaRouter from "./routes/siswa.js";
 import modulRouter from "./routes/modul.js";
 import pembelajaranRouter from "./routes/pembelajaran.js";
 import nilaiRouter from "./routes/nilai.js";
+import uploadRouter from "./routes/upload.js";
 import cors from "cors";
 
 const app = express();
@@ -25,6 +26,8 @@ app.use("/api/modul", modulRouter);
 app.use("/api/pembelajaran", pembelajaranRouter);
 
 app.use("/api/nilai", nilaiRouter);
+
+app.use("/api/upload", uploadRouter);
 
 app.use((err, req, res, next) => {
   if (err && err.name === "UnauthorizedError") {
