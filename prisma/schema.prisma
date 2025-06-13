@@ -15,11 +15,14 @@ datasource db {
 
 model guru {
     id         Int      @id @default(autoincrement())
+    nama       String
     username   String   @unique
     password   String
+    nuptk      String
     role       String   @default("guru") // ← Tambahkan ini
     created_at DateTime @default(now())
 
+    siswa      siswa[]  // 👈 relasi ke siswa
 }
 
 model siswa {
@@ -27,6 +30,8 @@ model siswa {
     nama     String
     semester Int
     kelompok String
+    guruId   Int             // 👈 foreign key
+    guru     guru @relation(fields: [guruId], references: [id])
 
     nilai nilai[]
 }
