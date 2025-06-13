@@ -15,8 +15,9 @@ const app = express();
 
 app.use(cors());
 
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: false }));
+origin: "*", // untuk sementara izinkan semua asal, bisa dibatasi nanti
+  methods ["GET", "POST", "DELETE", "PUT", "PATCH"],
+  allowedHeaders ["Content-Type", "Authorization"];
 
 const PORT = 3000;
 
