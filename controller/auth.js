@@ -2,30 +2,26 @@ import jwt from "jsonwebtoken";
 import prisma from "../lib/db.js";
 
 export const register = async (req, res) => {
-  const { nama, username, password, role = "guru" } = req.body;
+  const { nama, username, password, role = "guru" , nuptk} = req.body;
 
   // Validasi field wajib
-  if (!nama || !username || !password) {
-    return res.status(400).json({ message: "Nama, username, dan password wajib diisi" });
+  if (!nama || !username || !password || !nuptk) {
+    return res.status(400).json({ message: "Nama, username, password, dan NUPTK wajib diisi" });
   }
 
-  try {
-    // Cek apakah username sudah digunakan
-    const isExist = await prisma.guru.findUnique({
-      where: { username },
-    });
-
+    try {
+    const isExist = await prisma.guru.findUnique({ where: { username } });
     if (isExist) {
       return res.status(409).json({ error: "Username sudah terdaftar" });
     }
 
-    // Simpan akun baru
     const newUser = await prisma.guru.create({
       data: {
         nama,
         username,
         password,
-        role, // default: "guru"
+        nuptk,     // ← ditambahkan di sini
+        role,      // default "guru"
       },
     });
 
