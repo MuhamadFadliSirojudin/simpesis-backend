@@ -52,30 +52,37 @@ export const getGuruKinerja = async (req, res) => {
       include: {
         siswa: {
           include: {
-            nilai: true
-          }
-        }
-      }
+            nilai: true,
+          },
+        },
+      },
     });
 
-    const hasil = guruList.map((guru) => {
-      const totalSiswa = guru.siswa.length;
-      const siswaDinilai = guru.siswa.filter((s) => s.nilai.length > 0).length;
-      const persentase = totalSiswa === 0 ? 0 : Math.round((siswaDinilai / totalSiswa) * 100);
+    const totalModul = await prisma.modul.count();
+
+    const result = guruList.map((guru) => {
+      const jumlahSiswa = guru.siswa.length;
+      const totalNilai = guru.siswa.reduce(
+        (sum, s) => sum + s.nilai.length,
+        0
+      );
+      const targetNilai = jumlahSiswa * totalModul;
+      const progress =
+        targetNilai > 0 ? ((totalNilai / targetNilai) * 100).toFixed(1) : 0;
 
       return {
-        id: guru.id,
         nama: guru.nama,
-        totalSiswa,
-        siswaDinilai,
-        persentase
+        jumlahSiswa,
+        totalNilai,
+        targetNilai,
+        progress,
       };
     });
 
-    res.json(hasil);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Gagal mengambil data kinerja guru" });
+    res.status(200).json({ data: result });
+  } catch (error) {
+    console.error("getGuruKinerja error:", error);
+    res.status(500).json({ message: "Gagal mengambil kinerja guru" });
   }
 };
 
