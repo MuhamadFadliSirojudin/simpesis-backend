@@ -8,7 +8,6 @@ import nilaiRouter from "./routes/nilai.js";
 import uploadRouter from "./routes/upload.js";
 import laporanRouter from "./routes/laporan.js";
 import cors from "cors";
-import getGuruKinerja from "../controller/guru.js";
 import guruRouter from "./routes/guru.js";
 app.use("/api/guru", guruRouter);
 

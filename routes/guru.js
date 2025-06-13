@@ -2,7 +2,8 @@ import express from "express";
 import {
   createGuru,
   getAllGuru,
-  deleteGuruById
+  deleteGuruById,
+  getGuruKinerja
 } from "../controller/guru.js";
 
 const router = express.Router();
