@@ -5,7 +5,7 @@ const app = express();
 
 // ✅ Aktifkan CORS manual
 app.use(cors({
-  origin: "https://simpesis-tklabschool-upi.vercel.app",
+  origin: "*",
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
