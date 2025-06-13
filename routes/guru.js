@@ -3,7 +3,8 @@ import {
   createGuru,
   getAllGuru,
   deleteGuruById,
-  getGuruKinerja
+  getGuruKinerja,
+  updateGuru
 } from "../controller/guru.js";
 
 const router = express.Router();
