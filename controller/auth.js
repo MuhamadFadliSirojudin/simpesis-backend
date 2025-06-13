@@ -54,6 +54,8 @@ export const login = async (req, res) => {
 
   res.status(200).json({
     id: user.id,
+    username: user.username,
+    role: user.role, // tambahkan role
     accessToken: token
   })
 };
