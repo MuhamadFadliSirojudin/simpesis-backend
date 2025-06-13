@@ -15,7 +15,7 @@ const app = express();
 
 app.use(cors());
 
-origin: "*", // untuk sementara izinkan semua asal, bisa dibatasi nanti
+origin: "https://simpesis-tklabschool-upi.vercel.app", // untuk sementara izinkan semua asal, bisa dibatasi nanti
   methods ["GET", "POST", "DELETE", "PUT", "PATCH"],
   allowedHeaders ["Content-Type", "Authorization"];
 
