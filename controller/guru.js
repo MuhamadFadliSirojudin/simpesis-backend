@@ -32,7 +32,8 @@ export const getAllGuru = async (req, res) => {
       select: { id: true, nama: true, username: true, nuptk: true }
     });
     res.json({ data });
-  } catch (err) {
+  } catch (error) {
+    console.error("❌ Error getAllGuru:", error);
     res.status(500).json({ message: "Gagal mengambil data guru" });
   }
 };
