@@ -79,3 +79,24 @@ export const getGuruKinerja = async (req, res) => {
     res.status(500).json({ message: "Gagal mengambil data kinerja guru" });
   }
 };
+
+export const updateGuru = async (req, res) => {
+  const id = +req.params.id;
+  const { nama, username, nuptk, password } = req.body;
+
+  try {
+    const updated = await prisma.guru.update({
+      where: { id },
+      data: {
+        nama,
+        username,
+        nuptk,
+        ...(password && { password }), // hanya update jika ada
+      },
+    });
+
+    res.json({ message: "Guru berhasil diperbarui", data: updated });
+  } catch (error) {
+    res.status(500).json({ message: "Gagal memperbarui guru" });
+  }
+};

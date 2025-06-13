@@ -12,5 +12,6 @@ router.post("/", createGuru);
 router.get("/", getAllGuru);
 router.delete("/:id", deleteGuruById);
 router.get("/kinerja", getGuruKinerja);
+router.put("/:id", updateGuru);
 
 export default router;
