@@ -31,7 +31,7 @@ export const getAllGuru = async (req, res) => {
     const gurus = await prisma.guru.findMany({
       select: { id: true, nama: true, username: true, nuptk: true }
     });
-    res.json(gurus);
+    res.json({ data });
   } catch (err) {
     res.status(500).json({ message: "Gagal mengambil data guru" });
   }
