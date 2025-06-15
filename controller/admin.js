@@ -31,26 +31,69 @@ export const loginAdmin = async (req, res) => {
   }
 };
 
+export const createAdmin = async (req, res) => {
+  const { nama, username, password, nuptk } = req.body;
+
+  try {
+    const exist = await prisma.admin.findUnique({ where: { username } });
+    if (exist) {
+      return res.status(409).json({ message: "Username sudah digunakan" });
+    }
+
+    const admin = await prisma.admin.create({
+      data: {
+        nama,
+        username,
+        password,
+        nuptk,
+        role: "admin"
+      }
+    });
+
+    res.status(201).json(admin);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Gagal menambahkan admin" });
+  }
+};
+
 export const getAllAdmin = async (req, res) => {
   try {
-    const data = await prisma.admin.findMany();
-    res.status(200).json({ data });
-  } catch (err) {
+    const result = await prisma.admin.findMany();
+    res.json({ data: result });
+  } catch (error) {
+    console.error("❌ Error getAllAdmin:", error);
     res.status(500).json({ message: "Gagal mengambil data admin" });
   }
 };
 
-export const createAdmin = async (req, res) => {
-  const { nama, username, password } = req.body;
+export const deleteAdminById = async (req, res) => {
+  const id = +req.params.id;
   try {
-    const isExist = await prisma.admin.findUnique({ where: { username } });
-    if (isExist) return res.status(409).json({ message: "Username sudah terdaftar" });
-
-    await prisma.admin.create({
-      data: { nama, username, password },
-    });
-    res.status(201).json({ message: "Admin berhasil ditambahkan" });
+    await prisma.admin.delete({ where: { id } });
+    res.json({ message: "Admin dihapus" });
   } catch (err) {
-    res.status(500).json({ message: "Gagal menambahkan admin" });
+    res.status(500).json({ message: "Gagal menghapus admin" });
+  }
+};
+
+export const updateAdmin = async (req, res) => {
+  const id = +req.params.id;
+  const { nama, username, nuptk, password } = req.body;
+
+  try {
+    const updated = await prisma.admin.update({
+      where: { id },
+      data: {
+        nama,
+        username,
+        nuptk,
+        ...(password && { password }), // hanya update jika ada
+      },
+    });
+
+    res.json({ message: "Admin berhasil diperbarui", data: updated });
+  } catch (error) {
+    res.status(500).json({ message: "Gagal memperbarui admin" });
   }
 };
