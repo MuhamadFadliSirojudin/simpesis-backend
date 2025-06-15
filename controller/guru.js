@@ -106,3 +106,30 @@ export const updateGuru = async (req, res) => {
     res.status(500).json({ message: "Gagal memperbarui guru" });
   }
 };
+
+// controller/guru.js
+export const getDaftarGuru = async (req, res) => {
+  try {
+    const guruList = await prisma.guru.findMany({
+      where: { role: "guru" },
+      select: {
+        id: true,
+        nama: true,
+        siswa: {
+          select: { id: true }
+        }
+      }
+    });
+
+    const data = guruList.map(g => ({
+      id: g.id,
+      nama: g.nama,
+      jumlahSiswa: g.siswa.length
+    }));
+
+    res.json({ data });
+  } catch (err) {
+    console.error("Gagal mengambil daftar guru", err);
+    res.status(500).json({ message: "Gagal mengambil daftar guru" });
+  }
+};

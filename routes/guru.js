@@ -4,7 +4,8 @@ import {
   getAllGuru,
   deleteGuruById,
   getGuruKinerja,
-  updateGuru
+  updateGuru,
+  getDaftarGuru
 } from "../controller/guru.js";
 
 const router = express.Router();
@@ -14,5 +15,6 @@ router.get("/", getAllGuru);
 router.delete("/:id", deleteGuruById);
 router.get("/kinerja", getGuruKinerja);
 router.put("/:id", updateGuru);
+router.get("/daftar", getDaftarGuru);
 
 export default router;

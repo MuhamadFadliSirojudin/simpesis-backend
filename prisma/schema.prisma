@@ -31,7 +31,6 @@ model guru {
     nuptk      String
     role       String   @default("guru") // ← Tambahkan ini
     created_at DateTime @default(now())
-
     siswa      siswa[]  // 👈 relasi ke siswa
 }
 
@@ -42,8 +41,7 @@ model siswa {
     kelompok String
     guruId   Int             // 👈 foreign key
     guru     guru @relation(fields: [guruId], references: [id])
-
-    nilai nilai[]
+    nilai    nilai[]
 }
 
 model modul {
