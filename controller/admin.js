@@ -30,3 +30,27 @@ export const loginAdmin = async (req, res) => {
     res.status(500).json({ message: "Terjadi kesalahan saat login admin" });
   }
 };
+
+export const getAllAdmin = async (req, res) => {
+  try {
+    const data = await prisma.admin.findMany();
+    res.status(200).json({ data });
+  } catch (err) {
+    res.status(500).json({ message: "Gagal mengambil data admin" });
+  }
+};
+
+export const createAdmin = async (req, res) => {
+  const { nama, username, password } = req.body;
+  try {
+    const isExist = await prisma.admin.findUnique({ where: { username } });
+    if (isExist) return res.status(409).json({ message: "Username sudah terdaftar" });
+
+    await prisma.admin.create({
+      data: { nama, username, password },
+    });
+    res.status(201).json({ message: "Admin berhasil ditambahkan" });
+  } catch (err) {
+    res.status(500).json({ message: "Gagal menambahkan admin" });
+  }
+};
