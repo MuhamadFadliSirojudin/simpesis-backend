@@ -1,65 +1,88 @@
 import jwt from "jsonwebtoken";
 import prisma from "../lib/db.js";
 
+// REGISTER – hanya untuk GURU
 export const register = async (req, res) => {
-  const { nama, username, password, role = "guru" , nuptk} = req.body;
+  const { nama, username, password, nuptk } = req.body;
 
   // Validasi field wajib
   if (!nama || !username || !password || !nuptk) {
-    return res.status(400).json({ message: "Nama, username, password, dan NUPTK wajib diisi" });
+    return res.status(400).json({ message: "Nama, Username, Password, dan NUPTK wajib diisi." });
   }
 
-    try {
+  try {
     const isExist = await prisma.guru.findUnique({ where: { username } });
     if (isExist) {
-      return res.status(409).json({ error: "Username sudah terdaftar" });
+      return res.status(409).json({ error: "Username sudah terdaftar sebagai guru." });
     }
 
-    const newUser = await prisma.guru.create({
+    await prisma.guru.create({
       data: {
         nama,
         username,
         password,
-        nuptk,     // ← ditambahkan di sini
-        role,      // default "guru"
+        nuptk,
+        role: "guru", // default
       },
     });
 
-    return res.status(201).json({ message: "Akun berhasil dibuat" });
+    return res.status(201).json({ message: "Akun guru berhasil dibuat." });
   } catch (err) {
     console.error("Error saat register:", err);
-    return res.status(500).json({ error: "Terjadi kesalahan saat membuat akun" });
+    return res.status(500).json({ error: "Terjadi kesalahan saat membuat akun." });
   }
 };
 
+// LOGIN – bisa untuk ADMIN atau GURU
 export const login = async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    const user = await prisma.guru.findUnique({
-      where: { username },
-    });
+    // Cek ke tabel admin lebih dulu
+    const admin = await prisma.admin.findUnique({ where: { username } });
 
-    if (!user) {
-      return res.status(404).json({ message: `Akun dengan username: ${username} tidak ditemukan` });
+    if (admin) {
+      if (admin.password !== password) {
+        return res.status(400).json({ message: "Password tidak sesuai." });
+      }
+
+      const token = "Bearer " + jwt.sign({ id: admin.id }, "LabschoolUPI", {
+        expiresIn: 60 * 60 * 24,
+      });
+
+      return res.status(200).json({
+        id: admin.id,
+        username: admin.username,
+        role: "admin",
+        accessToken: token,
+      });
     }
 
-    if (user.password !== password) {
-      return res.status(400).json({ message: "Password tidak sesuai" });
+    // Jika bukan admin → cek ke tabel guru
+    const guru = await prisma.guru.findUnique({ where: { username } });
+
+    if (!guru) {
+      return res.status(404).json({
+        message: `Akun dengan username: ${username} tidak ditemukan`,
+      });
     }
 
-    const token = 'Bearer ' + jwt.sign({ id: user.id }, 'LabschoolUPI', {
+    if (guru.password !== password) {
+      return res.status(400).json({ message: "Password tidak sesuai." });
+    }
+
+    const token = "Bearer " + jwt.sign({ id: guru.id }, "LabschoolUPI", {
       expiresIn: 60 * 60 * 24,
     });
 
     return res.status(200).json({
-      id: user.id,
-      username: user.username,
-      role: user.role,
+      id: guru.id,
+      username: guru.username,
+      role: guru.role,
       accessToken: token,
     });
   } catch (err) {
     console.error("Error saat login:", err);
-    return res.status(500).json({ error: "Terjadi kesalahan saat login" });
+    return res.status(500).json({ error: "Terjadi kesalahan saat login." });
   }
 };
