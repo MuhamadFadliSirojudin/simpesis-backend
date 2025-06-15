@@ -13,6 +13,16 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
+model admin {
+  id         Int      @id @default(autoincrement())
+  nama       String
+  username   String   @unique
+  password   String
+  nuptk      String
+  role       String   @default("admin")
+  created_at DateTime @default(now())
+}
+
 model guru {
     id         Int      @id @default(autoincrement())
     nama       String
