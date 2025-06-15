@@ -9,7 +9,7 @@ import uploadRouter from "./routes/upload.js";
 import laporanRouter from "./routes/laporan.js";
 import cors from "cors";
 import guruRouter from "./routes/guru.js";
-
+import adminRouter from "./routes/admin.js";
 const app = express();
 
 app.use(cors());
@@ -18,6 +18,8 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false }));
 
 const PORT = 3000;
+
+app.use("/api/admin", adminRouter);
 
 app.use("/api/guru", guruRouter);
 
