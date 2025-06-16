@@ -81,16 +81,33 @@ export const getAllSiswa = async (req, res) => {
 };
 
 export const deleteSiswa = async (req, res) => {
-  const siswaId = req.params.siswaId;
+  const siswaId = +req.params.siswaId;
+  const guruId = +req.query.guruId;
 
   try {
-    await prisma.siswa.delete({
-      where: { id: +siswaId },
+    // pastikan siswa memang milik guru yang login
+    const siswa = await prisma.siswa.findFirst({
+      where: {
+        id: siswaId,
+        guruId,
+      },
     });
+
+    if (!siswa) {
+      return res.status(404).json({ message: "Siswa tidak ditemukan atau bukan milik Anda" });
+    }
+
+    await prisma.siswa.delete({
+      where: {
+        id: siswaId,
+      },
+    });
+
     return res.status(200).json({ message: "Berhasil menghapus siswa" });
   } catch (error) {
-    console.log(error);
+    console.log("Error delete siswa:", error);
     return res.status(500).json({ error: "Gagal menghapus siswa" });
   }
 };
+
 
