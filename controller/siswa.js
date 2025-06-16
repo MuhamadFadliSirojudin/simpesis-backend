@@ -120,4 +120,24 @@ export const deleteSiswa = async (req, res) => {
   }
 };
 
+export const getSiswaById = async (req, res) => {
+  const { id } = req.params;
 
+  try {
+    const siswa = await prisma.siswa.findUnique({
+      where: { id: Number(id) },
+      select: {
+        id: true,
+        nama: true,
+      },
+    });
+
+    if (!siswa) {
+      return res.status(404).json({ message: "Siswa tidak ditemukan" });
+    }
+
+    return res.status(200).json({ data: siswa });
+  } catch (error) {
+    console.error("Gagal mengambil siswa:", error);      return res.status(500).json({ message: "Gagal mengambil siswa" });
+  }
+};
