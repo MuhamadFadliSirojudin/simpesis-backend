@@ -1,7 +1,7 @@
 import prisma from "../lib/db.js";
 
 export const createSiswa = async (req, res) => {
-  const { nama, semester, kelompok } = req.body;
+  const { nama, semester, kelompok, guruId } = req.body;
   const numberSemester = +semester;
 
   try {
@@ -10,12 +10,13 @@ export const createSiswa = async (req, res) => {
         nama,
         kelompok,
         semester: numberSemester,
+        guruId: +guruId, // tambahkan pengecekan siswa hanya dari guru ini
       },
     });
 
     if (isExist.length !== 0) {
       return res.status(409).json({
-        message: "siswa sudah terdaftar",
+        message: "Siswa sudah terdaftar oleh Anda",
       });
     }
 
@@ -24,6 +25,7 @@ export const createSiswa = async (req, res) => {
         nama,
         kelompok,
         semester: numberSemester,
+        guruId: +guruId, // ← tambahkan ini untuk menyimpan relasi guru
       },
     });
 
@@ -40,12 +42,13 @@ export const createSiswa = async (req, res) => {
 };
 
 export const getAllSiswa = async (req, res) => {
-  const { semester, nama } = req.query;
+  const { semester, nama, guruId } = req.query;
 
   try {
     const siswas = await prisma.siswa.findMany({
       where: {
-        ...(semester && { semester: semester }),
+        ...(guruId && { guruId: Number(guruId) }),
+        ...(semester && { semester: Number(semester) }),
         ...(nama && { nama: { contains: nama, mode: "insensitive" } }),
       },
     });
@@ -57,20 +60,23 @@ export const getAllSiswa = async (req, res) => {
 };
 
 export const deleteSiswa = async (req, res) => {
-  const siswaId = req.params.siswaId;
+  const siswaId = +req.params.siswaId;
+  const { guruId } = req.body; // ⬅️ frontend harus kirim guruId
 
   try {
-    await prisma.siswa.delete({
-      where: {
-        id: +siswaId,
-      },
-    });
+    const siswa = await prisma.siswa.findUnique({ where: { id: siswaId } });
+
+    if (!siswa || siswa.guruId !== +guruId) {
+      return res.status(403).json({ message: "Tidak diizinkan menghapus siswa ini" });
+    }
+
+    await prisma.siswa.delete({ where: { id: siswaId } });
 
     return res.status(200).json({ message: "Berhasil menghapus siswa" });
   } catch (error) {
     console.log(error);
-    return res
-      .status(500)
-      .json({ error: "Terjadi kesalahan saat mengambil data modul." });
+    return res.status(500).json({
+      error: "Terjadi kesalahan saat menghapus siswa.",
+    });
   }
 };
