@@ -5,12 +5,31 @@ export const createSiswa = async (req, res) => {
   const numberSemester = +semester;
 
   try {
+    // Validasi guruId dikirim
+    if (!guruId) {
+      return res.status(400).json({
+        message: "ID guru wajib dikirim",
+      });
+    }
+
+    // Cek apakah guru dengan ID tersebut ada
+    const guru = await prisma.guru.findUnique({
+      where: { id: +guruId },
+    });
+
+    if (!guru) {
+      return res.status(404).json({
+        message: "ID guru tidak ditemukan",
+      });
+    }
+
+    // Cek apakah siswa sudah ada untuk guru tersebut
     const isExist = await prisma.siswa.findMany({
       where: {
         nama,
         kelompok,
         semester: numberSemester,
-        guruId: +guruId, // tambahkan pengecekan siswa hanya dari guru ini
+        guruId: +guruId,
       },
     });
 
@@ -20,12 +39,13 @@ export const createSiswa = async (req, res) => {
       });
     }
 
+    // Tambah siswa dan kaitkan dengan guru
     const newSiswa = await prisma.siswa.create({
       data: {
         nama,
         kelompok,
         semester: numberSemester,
-        guru: { connect: { id: +guruId } }, // ← tambahkan ini untuk menyimpan relasi guru
+        guru: { connect: { id: +guruId } },
       },
     });
 
@@ -34,12 +54,13 @@ export const createSiswa = async (req, res) => {
       data: newSiswa,
     });
   } catch (error) {
-    console.log(error);
+    console.log("❌ Error createSiswa:", error);
     return res.status(500).json({
       message: "Gagal menambahkan siswa",
     });
   }
 };
+
 
 export const getAllSiswa = async (req, res) => {
   const { semester, nama, guruId } = req.query;
