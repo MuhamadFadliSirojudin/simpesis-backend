@@ -9,6 +9,6 @@ router.get("/", getAllSiswa);
 
 router.delete("/:siswaId", deleteSiswa);
 
-router.get("/:id", getSiswaById);
+router.get("/:siswaId", getSiswaById);
 
 export default router;
