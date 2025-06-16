@@ -72,10 +72,20 @@ export const getAllSiswa = async (req, res) => {
         ...(semester && { semester: Number(semester) }),
         ...(nama && { nama: { contains: nama, mode: "insensitive" } }),
       },
+      include: {
+      nilai: true, // ⬅️ ambil data nilai
+      },
     });
 
-    return res.status(200).json({ data: siswas });
+    const processed = siswas.map((s) => ({
+        ...s,
+        totalNilai: s.nilai.length,
+      }
+    ));
+
+    return res.status(200).json({ data: processed });
   } catch (err) {
+    console.error("Error getAllSiswa:", err);
     return res.status(500).json({ error: err.message });
   }
 };
