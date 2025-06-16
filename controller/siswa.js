@@ -25,7 +25,7 @@ export const createSiswa = async (req, res) => {
         nama,
         kelompok,
         semester: numberSemester,
-        guruId: +guruId, // ← tambahkan ini untuk menyimpan relasi guru
+        guru: { connect: { id: +guruId } }, // ← tambahkan ini untuk menyimpan relasi guru
       },
     });
 

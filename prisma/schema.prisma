@@ -41,6 +41,7 @@ model siswa {
     kelompok String
     guruId   Int             // 👈 foreign key
     guru     guru @relation(fields: [guruId], references: [id])
+    
     nilai    nilai[]
 }
 
