@@ -81,23 +81,16 @@ export const getAllSiswa = async (req, res) => {
 };
 
 export const deleteSiswa = async (req, res) => {
-  const siswaId = +req.params.siswaId;
-  const { guruId } = req.body; // ⬅️ frontend harus kirim guruId
+  const siswaId = req.params.siswaId;
 
   try {
-    const siswa = await prisma.siswa.findUnique({ where: { id: siswaId } });
-
-    if (!siswa || siswa.guruId !== +guruId) {
-      return res.status(403).json({ message: "Tidak diizinkan menghapus siswa ini" });
-    }
-
-    await prisma.siswa.delete({ where: { id: siswaId } });
-
+    await prisma.siswa.delete({
+      where: { id: +siswaId },
+    });
     return res.status(200).json({ message: "Berhasil menghapus siswa" });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({
-      error: "Terjadi kesalahan saat menghapus siswa.",
-    });
+    return res.status(500).json({ error: "Gagal menghapus siswa" });
   }
 };
+
