@@ -67,16 +67,19 @@ model pembelajaran {
 }
 
 model nilai {
-    id              Int   @id @default(autoincrement())
-    id_pembelajaran Int
-    id_siswa        Int
-    id_modul        Int
-    foto_karya      Bytes
-    nilai           Int
+  id              Int   @id @default(autoincrement())
+  id_pembelajaran Int
+  id_siswa        Int
+  id_modul        Int
+  foto_karya      Bytes
+  nilai           Int
 
-    pembelajaran pembelajaran @relation(fields: [id_pembelajaran], references: [id])
-    modul        modul        @relation(fields: [id_modul], references: [id])
-    siswa        siswa        @relation(fields: [id_siswa], references: [id])
+  createdAt             DateTime @default(now())   // ✅ Waktu dibuat
+  updatedAt DateTime    @updatedAt @default(now())        // ✅ Waktu diupdate (opsional)
+
+  pembelajaran pembelajaran @relation(fields: [id_pembelajaran], references: [id])
+  modul        modul        @relation(fields: [id_modul], references: [id])
+  siswa        siswa        @relation(fields: [id_siswa], references: [id])
 }
 
 model Upload {
