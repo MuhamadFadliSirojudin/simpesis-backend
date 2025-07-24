@@ -36,7 +36,7 @@ app.use("/api/nilai", nilaiRouter);
 
 app.use("/api/upload", uploadRouter);
 
-app.use("/api/rekap", rekapRoutes);
+app.use("/api", rekapRoutes);
 
 app.use("/api/laporan", laporanRouter);
 
