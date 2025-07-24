@@ -10,6 +10,7 @@ import laporanRouter from "./routes/laporan.js";
 import cors from "cors";
 import guruRouter from "./routes/guru.js";
 import adminRouter from "./routes/admin.js";
+import rekapRoutes from "./routes/rekap";
 const app = express();
 
 app.use(cors());
@@ -34,6 +35,8 @@ app.use("/api/pembelajaran", pembelajaranRouter);
 app.use("/api/nilai", nilaiRouter);
 
 app.use("/api/upload", uploadRouter);
+
+app.use("/api", rekapRoutes);
 
 app.use("/api/laporan", laporanRouter);
 

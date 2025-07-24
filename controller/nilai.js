@@ -119,31 +119,3 @@ export const deleteNilai = async (req, res) => {
     });
   }
 };
-
-// Ambil nilai berdasarkan siswa dan tanggal 7 hari terakhir
-export const getRekapMingguanBySiswa = async (req, res) => {
-  const { siswaId } = req.params;
-
-  try {
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    const nilai = await prisma.nilai.findMany({
-      where: {
-        id_siswa: Number(siswaId),
-        createdAt: {
-          gte: sevenDaysAgo, // hanya ambil data 7 hari terakhir
-        },
-      },
-      include: {
-        modul: true,
-        pembelajaran: true,
-      },
-    });
-
-    res.status(200).json({ data: nilai });
-  } catch (err) {
-    console.error("Rekap mingguan error:", err);
-    res.status(500).json({ error: "Gagal mengambil rekap mingguan" });
-  }
-};
