@@ -1,4 +1,4 @@
-import prisma from "../libs/prisma";
+import prisma from "../lib/db.js";
 
 export const getRekapMingguan = async (req, res) => {
   try {
