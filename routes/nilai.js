@@ -14,4 +14,6 @@ router.delete("/", deleteNilai);
 
 router.get("/:siswaId", getAllNilaiBySiswaId);
 
+router.get("/rekap-mingguan/:siswaId", getRekapMingguanBySiswa);
+
 export default router;
