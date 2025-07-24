@@ -1,5 +1,5 @@
 import express from "express";
-import { getRekapMingguan } from "../controllers/rekap.js";
+import { getRekapMingguan } from "../controller/rekap.js";
 
 const router = express.Router();
 
