@@ -10,7 +10,7 @@ import laporanRouter from "./routes/laporan.js";
 import cors from "cors";
 import guruRouter from "./routes/guru.js";
 import adminRouter from "./routes/admin.js";
-import rekapRoutes from "./routes/rekap";
+import rekapRoutes from "./routes/rekap.js";
 const app = express();
 
 app.use(cors());
