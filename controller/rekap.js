@@ -38,15 +38,16 @@ export const getRekapMingguan = async (req, res) => {
 export const getRekapMingguanBySiswa = async (req, res) => {
   const { siswaId } = req.query;
 
-  if (!siswaId) {
-    return res.status(400).json({ message: "siswaId wajib diisi" });
+  const siswaIdInt = parseInt(siswaId);
+  if (isNaN(siswaIdInt)) {
+    return res.status(400).json({ message: "siswaId wajib diisi dengan angka yang valid" });
   }
 
   try {
     const data = await prisma.nilai.groupBy({
       by: ["id_modul"],
       where: {
-        id_siswa: parseInt(siswaId),
+        id_siswa: siswaIdInt,
       },
       _count: { id: true },
       _avg: { nilai: true },
@@ -60,12 +61,14 @@ export const getRekapMingguanBySiswa = async (req, res) => {
       const createdAt = await prisma.nilai.findFirst({
         where: {
           id_modul: d.id_modul,
-          id_siswa: parseInt(siswaId),
+          id_siswa: siswaIdInt,
         },
         orderBy: { createdAt: "asc" },
       });
 
-      const mingguKe = createdAt ? Math.ceil((new Date(createdAt.createdAt).getDate()) / 7) : 0;
+      const mingguKe = createdAt
+        ? Math.ceil(new Date(createdAt.createdAt).getDate() / 7)
+        : 0;
 
       return {
         mingguKe,
