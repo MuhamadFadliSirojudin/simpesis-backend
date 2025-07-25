@@ -34,3 +34,50 @@ export const getRekapMingguan = async (req, res) => {
     res.status(500).json({ message: "Gagal mengambil rekap mingguan" });
   }
 };
+
+export const getRekapMingguanBySiswa = async (req, res) => {
+  const { siswaId } = req.query;
+
+  if (!siswaId) {
+    return res.status(400).json({ message: "siswaId wajib diisi" });
+  }
+
+  try {
+    const data = await prisma.nilai.groupBy({
+      by: ["id_modul"],
+      where: {
+        id_siswa: parseInt(siswaId),
+      },
+      _count: { id: true },
+      _avg: { nilai: true },
+    });
+
+    const result = await Promise.all(data.map(async (d) => {
+      const modul = await prisma.modul.findUnique({
+        where: { id: d.id_modul },
+      });
+
+      const createdAt = await prisma.nilai.findFirst({
+        where: {
+          id_modul: d.id_modul,
+          id_siswa: parseInt(siswaId),
+        },
+        orderBy: { createdAt: "asc" },
+      });
+
+      const mingguKe = createdAt ? Math.ceil((new Date(createdAt.createdAt).getDate()) / 7) : 0;
+
+      return {
+        mingguKe,
+        modul: modul?.nama || "Tidak diketahui",
+        jumlah: d._count.id,
+        rataRata: parseFloat((d._avg.nilai ?? 0).toFixed(1)),
+      };
+    }));
+
+    res.json(result);
+  } catch (error) {
+    console.error("Gagal mengambil rekap mingguan per siswa:", error);
+    res.status(500).json({ message: "Gagal mengambil rekap mingguan per siswa" });
+  }
+};
