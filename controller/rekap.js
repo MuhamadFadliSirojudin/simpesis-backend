@@ -44,39 +44,48 @@ export const getRekapMingguanBySiswa = async (req, res) => {
   }
 
   try {
-    const data = await prisma.nilai.groupBy({
-      by: ["id_modul"],
+    const nilaiData = await prisma.nilai.findMany({
       where: {
         id_siswa: siswaIdInt,
       },
-      _count: { id: true },
-      _avg: { nilai: true },
+      include: {
+        modul: true,
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
     });
 
-    const result = await Promise.all(data.map(async (d) => {
-      const modul = await prisma.modul.findUnique({
-        where: { id: d.id_modul },
-      });
+    const grouped = {};
 
-      const createdAt = await prisma.nilai.findFirst({
-        where: {
-          id_modul: d.id_modul,
-          id_siswa: siswaIdInt,
-        },
-        orderBy: { createdAt: "asc" },
-      });
+    for (const item of nilaiData) {
+      const modulId = item.id_modul;
+      if (!grouped[modulId]) {
+        grouped[modulId] = {
+          modulNama: item.modul?.topik || "Tidak diketahui", // Atau .nama jika kamu pakai nama
+          jumlah: 0,
+          totalNilai: 0,
+          createdAt: item.createdAt,
+        };
+      }
 
-      const mingguKe = createdAt
-        ? Math.ceil(new Date(createdAt.createdAt).getDate() / 7)
-        : 0;
+      grouped[modulId].jumlah++;
+      grouped[modulId].totalNilai += item.nilai;
 
+      if (item.createdAt < grouped[modulId].createdAt) {
+        grouped[modulId].createdAt = item.createdAt;
+      }
+    }
+
+    const result = Object.values(grouped).map((d) => {
+      const mingguKe = Math.ceil(new Date(d.createdAt).getDate() / 7);
       return {
         mingguKe,
-        modul: modul?.nama || "Tidak diketahui",
-        jumlah: d._count.id,
-        rataRata: parseFloat((d._avg.nilai ?? 0).toFixed(1)),
+        modul: d.modulNama,
+        jumlah: d.jumlah,
+        rataRata: parseFloat((d.totalNilai / d.jumlah).toFixed(1)),
       };
-    }));
+    });
 
     res.json(result);
   } catch (error) {
