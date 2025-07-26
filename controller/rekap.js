@@ -93,3 +93,59 @@ export const getRekapMingguanBySiswa = async (req, res) => {
     res.status(500).json({ message: "Gagal mengambil rekap mingguan per siswa" });
   }
 };
+
+// /controller/rekap.js
+
+export const getLaporanMingguan = async (req, res) => {
+  const siswaId = parseInt(req.query.siswaId);
+
+  const siswa = await prisma.siswa.findUnique({
+    where: { id: siswaId },
+    include: {
+      kelas: true, // jika ada
+    },
+  });
+
+  const nilai = await prisma.nilai.findMany({
+    where: { id_siswa: siswaId },
+    include: { modul: true },
+    orderBy: { createdAt: "asc" },
+  });
+
+  const grouped = {};
+  for (const item of nilai) {
+    const id = item.id_modul;
+    if (!grouped[id]) {
+      grouped[id] = {
+        modul: item.modul?.topik ?? "Tidak diketahui",
+        kegiatan: item.modul?.tujuan ?? "-",
+        jumlah: 0,
+        total: 0,
+        tanggal: item.createdAt,
+      };
+    }
+    grouped[id].jumlah++;
+    grouped[id].total += item.nilai;
+
+    if (item.createdAt < grouped[id].tanggal) {
+      grouped[id].tanggal = item.createdAt;
+    }
+  }
+
+  const rekap = Object.values(grouped).map((g) => ({
+    mingguKe: Math.ceil(g.tanggal.getDate() / 7),
+    modul: g.modul,
+    kegiatan: g.kegiatan,
+    jumlah: g.jumlah,
+    rataRata: parseFloat((g.total / g.jumlah).toFixed(1)),
+  }));
+
+  res.json({
+    siswa: {
+      nama: siswa.nama,
+      waliKelas: siswa.waliKelas || "Bu Siti",
+      fase: siswa.fase || "Kelompok A",
+    },
+    rekap,
+  });
+};
