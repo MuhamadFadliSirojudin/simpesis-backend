@@ -94,58 +94,51 @@ export const getRekapMingguanBySiswa = async (req, res) => {
   }
 };
 
-// /controller/rekap.js
-
 export const getLaporanMingguan = async (req, res) => {
-  const siswaId = parseInt(req.query.siswaId);
+  const { siswaId } = req.query;
 
-  const siswa = await prisma.siswa.findUnique({
-    where: { id: siswaId },
-    include: {
-      kelas: true, // jika ada
-    },
-  });
-
-  const nilai = await prisma.nilai.findMany({
-    where: { id_siswa: siswaId },
-    include: { modul: true },
-    orderBy: { createdAt: "asc" },
-  });
-
-  const grouped = {};
-  for (const item of nilai) {
-    const id = item.id_modul;
-    if (!grouped[id]) {
-      grouped[id] = {
-        modul: item.modul?.topik ?? "Tidak diketahui",
-        kegiatan: item.modul?.tujuan ?? "-",
-        jumlah: 0,
-        total: 0,
-        tanggal: item.createdAt,
-      };
-    }
-    grouped[id].jumlah++;
-    grouped[id].total += item.nilai;
-
-    if (item.createdAt < grouped[id].tanggal) {
-      grouped[id].tanggal = item.createdAt;
-    }
+  const siswaIdInt = parseInt(siswaId);
+  if (isNaN(siswaIdInt)) {
+    return res.status(400).json({ message: "siswaId tidak valid" });
   }
 
-  const rekap = Object.values(grouped).map((g) => ({
-    mingguKe: Math.ceil(g.tanggal.getDate() / 7),
-    modul: g.modul,
-    kegiatan: g.kegiatan,
-    jumlah: g.jumlah,
-    rataRata: parseFloat((g.total / g.jumlah).toFixed(1)),
-  }));
+  try {
+    const siswa = await prisma.siswa.findUnique({
+      where: { id: siswaIdInt },
+    });
 
-  res.json({
-    siswa: {
-      nama: siswa.nama,
-      waliKelas: siswa.waliKelas || "Bu Siti",
-      fase: siswa.fase || "Kelompok A",
-    },
-    rekap,
-  });
+    const data = await prisma.nilai.findMany({
+      where: { id_siswa: siswaIdInt },
+      include: {
+        modul: true,
+        pembelajaran: true,
+      },
+    });
+
+    const grouped = data.reduce((acc, curr) => {
+      const modulId = curr.id_modul;
+      if (!acc[modulId]) {
+        acc[modulId] = {
+          modul: curr.modul?.topik || "Tidak diketahui",
+          kegiatan: curr.pembelajaran?.kegiatan || "-",
+          jumlah: 0,
+          total: 0,
+          mingguKe: Math.ceil(new Date(curr.createdAt).getDate() / 7),
+        };
+      }
+      acc[modulId].jumlah += 1;
+      acc[modulId].total += curr.nilai;
+      return acc;
+    }, {});
+
+    const rekap = Object.values(grouped).map((item) => ({
+      ...item,
+      rataRata: parseFloat((item.total / item.jumlah).toFixed(1)),
+    }));
+
+    res.json({ siswa, rekap });
+  } catch (err) {
+    console.error("Gagal ambil laporan mingguan:", err);
+    res.status(500).json({ message: "Gagal ambil laporan mingguan" });
+  }
 };
