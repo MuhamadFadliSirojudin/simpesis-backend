@@ -124,15 +124,38 @@ export const getDetailRekapMingguanBySiswa = async (req, res) => {
       },
     });
 
-    const result = nilaiData.map((item) => {
+    const grouped = {};
+
+    for (const item of nilaiData) {
       const mingguKe = Math.ceil(new Date(item.createdAt).getDate() / 7);
-      return {
-        mingguKe,
-        modul: item.modul?.topik || "-",
-        kegiatan: item.pembelajaran?.nama || "-",
+      const modul = item.modul?.topik || "-";
+      const key = `${mingguKe}-${modul}`;
+
+      if (!grouped[key]) {
+        grouped[key] = {
+          mingguKe,
+          modul,
+          jumlah: 0,
+          totalNilai: 0,
+          kegiatanList: [],
+        };
+      }
+
+      grouped[key].jumlah++;
+      grouped[key].totalNilai += item.nilai;
+      grouped[key].kegiatanList.push({
+        nama: item.pembelajaran?.nama || "-",
         nilai: item.nilai,
-      };
-    });
+      });
+    }
+
+    const result = Object.values(grouped).map((item) => ({
+      mingguKe: item.mingguKe,
+      modul: item.modul,
+      jumlah: item.jumlah,
+      rataRata: parseFloat((item.totalNilai / item.jumlah).toFixed(1)),
+      kegiatanList: item.kegiatanList,
+    }));
 
     res.json(result);
   } catch (error) {
