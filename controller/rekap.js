@@ -49,7 +49,15 @@ export const getRekapMingguanBySiswa = async (req, res) => {
         id_siswa: siswaIdInt,
       },
       include: {
-        modul: true,
+        modul: {
+          include: {
+            pembelajaran: {
+              select: {
+                nama: true,
+              },
+            },
+          },
+        },
         pembelajaran: true,
       },
       orderBy: {
@@ -63,8 +71,8 @@ export const getRekapMingguanBySiswa = async (req, res) => {
       const modulId = item.id_modul;
       if (!grouped[modulId]) {
         grouped[modulId] = {
-          modulNama: item.modul?.topik || "Tidak diketahui", // Atau .nama jika kamu pakai nama
-          kegiatanNama: item.pembelajaran?.kegiatan || "-",
+          modulNama: item.modul?.topik || item.modul?.nama || "Tidak diketahui",
+          kegiatanNama: item.modul?.pembelajaran?.map((p) => p.nama).join(", ") || "-",
           jumlah: 0,
           totalNilai: 0,
           createdAt: item.createdAt,
