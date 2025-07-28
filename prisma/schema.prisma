@@ -51,10 +51,9 @@ model modul {
     topik        String
     nip          String
     tujuan       String
+    nilai        nilai[]
 
-    modul pembelajaran[]
-
-    nilai    nilai[]
+    pembelajaran    pembelajaran[]   @relation("ModulToPembelajaran")
 }
 
 model pembelajaran {
@@ -62,8 +61,8 @@ model pembelajaran {
     modul_id Int
     nama     String
 
-    modul modul   @relation(fields: [modul_id], references: [id])
-    nilai nilai[]
+    modul    modul   @relation("ModulToPembelajaran", fields: [modul_id], references: [id])
+    nilai    nilai[]
 }
 
 model nilai {

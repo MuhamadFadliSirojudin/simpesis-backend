@@ -49,15 +49,7 @@ export const getRekapMingguanBySiswa = async (req, res) => {
         id_siswa: siswaIdInt,
       },
       include: {
-        modul: {
-          include: {
-            pembelajaran: {
-              select: {
-                nama: true,
-              },
-            },
-          },
-        },
+        modul: true,
         pembelajaran: true,
       },
       orderBy: {
@@ -72,11 +64,16 @@ export const getRekapMingguanBySiswa = async (req, res) => {
       if (!grouped[modulId]) {
         grouped[modulId] = {
           modulNama: item.modul?.topik || item.modul?.nama || "Tidak diketahui",
-          kegiatanNama: item.modul?.pembelajaran?.map((p) => p.nama).join(", ") || "-",
+          kegiatanSet: new Set(),
           jumlah: 0,
           totalNilai: 0,
           createdAt: item.createdAt,
         };
+      }
+
+      // Tambahkan nama kegiatan jika ada
+      if (item.pembelajaran?.nama) {
+        grouped[modulId].kegiatanSet.add(item.pembelajaran.nama);
       }
 
       grouped[modulId].jumlah++;
@@ -92,7 +89,7 @@ export const getRekapMingguanBySiswa = async (req, res) => {
       return {
         mingguKe,
         modul: d.modulNama,
-        kegiatan: d.kegiatanNama,
+        kegiatan: [...d.kegiatanSet].join(", ") || "-",
         jumlah: d.jumlah,
         rataRata: parseFloat((d.totalNilai / d.jumlah).toFixed(1)),
       };
