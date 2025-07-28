@@ -102,6 +102,45 @@ export const getRekapMingguanBySiswa = async (req, res) => {
   }
 };
 
+export const getDetailRekapMingguanBySiswa = async (req, res) => {
+  const { siswaId } = req.query;
+
+  const siswaIdInt = parseInt(siswaId);
+  if (isNaN(siswaIdInt)) {
+    return res.status(400).json({ message: "siswaId wajib diisi dengan angka yang valid" });
+  }
+
+  try {
+    const nilaiData = await prisma.nilai.findMany({
+      where: {
+        id_siswa: siswaIdInt,
+      },
+      include: {
+        modul: true,
+        pembelajaran: true,
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+
+    const result = nilaiData.map((item) => {
+      const mingguKe = Math.ceil(new Date(item.createdAt).getDate() / 7);
+      return {
+        mingguKe,
+        modul: item.modul?.topik || "-",
+        kegiatan: item.pembelajaran?.nama || "-",
+        nilai: item.nilai,
+      };
+    });
+
+    res.json(result);
+  } catch (error) {
+    console.error("Gagal mengambil detail rekap mingguan:", error);
+    res.status(500).json({ message: "Gagal mengambil detail rekap mingguan" });
+  }
+};
+
 export const getLaporanMingguan = async (req, res) => {
   const { siswaId } = req.query;
 
