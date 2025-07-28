@@ -50,6 +50,7 @@ export const getRekapMingguanBySiswa = async (req, res) => {
       },
       include: {
         modul: true,
+        pembelajaran: true,
       },
       orderBy: {
         createdAt: "asc",
@@ -63,6 +64,7 @@ export const getRekapMingguanBySiswa = async (req, res) => {
       if (!grouped[modulId]) {
         grouped[modulId] = {
           modulNama: item.modul?.topik || "Tidak diketahui", // Atau .nama jika kamu pakai nama
+          kegiatanNama: item.pembelajaran?.kegiatan || "-",
           jumlah: 0,
           totalNilai: 0,
           createdAt: item.createdAt,
