@@ -82,6 +82,7 @@ export const getRekapMingguanBySiswa = async (req, res) => {
       return {
         mingguKe,
         modul: d.modulNama,
+        kegiatan: d.kegiatanNama,
         jumlah: d.jumlah,
         rataRata: parseFloat((d.totalNilai / d.jumlah).toFixed(1)),
       };
