@@ -183,23 +183,34 @@ export const getLaporanMingguan = async (req, res) => {
         modul: true,
         pembelajaran: true,
       },
+      orderBy: {
+        createdAt: "asc",
+      },
     });
 
-    const grouped = data.reduce((acc, curr) => {
-      const modulId = curr.id_modul;
-      if (!acc[modulId]) {
-        acc[modulId] = {
-          modul: curr.modul?.topik || "Tidak diketahui",
-          kegiatan: curr.pembelajaran?.kegiatan || "-",
+    // Grouping berdasarkan modul dan minggu
+    const grouped = {};
+
+    data.forEach((item) => {
+      const mingguKe = Math.ceil(new Date(item.createdAt).getDate() / 7);
+      const key = `${item.id_modul}-${mingguKe}`;
+      if (!grouped[key]) {
+        grouped[key] = {
+          mingguKe,
+          modul: item.modul?.topik || "Tidak diketahui",
           jumlah: 0,
           total: 0,
-          mingguKe: Math.ceil(new Date(curr.createdAt).getDate() / 7),
+          kegiatanList: [],
         };
       }
-      acc[modulId].jumlah += 1;
-      acc[modulId].total += curr.nilai;
-      return acc;
-    }, {});
+
+      grouped[key].jumlah += 1;
+      grouped[key].total += item.nilai;
+      grouped[key].kegiatanList.push({
+        nama: item.pembelajaran?.nama || "-",
+        nilai: item.nilai,
+      });
+    });
 
     const rekap = Object.values(grouped).map((item) => ({
       ...item,
