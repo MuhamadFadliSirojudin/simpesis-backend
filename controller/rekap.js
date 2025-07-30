@@ -1,5 +1,6 @@
 import prisma from "../lib/db.js";
 
+//Konsep Mingguan
 export const getRekapMingguan = async (req, res) => {
   try {
     const data = await prisma.nilai.groupBy({
@@ -172,6 +173,11 @@ export const getLaporanMingguan = async (req, res) => {
     return res.status(400).json({ message: "siswaId tidak valid" });
   }
 
+  const siswa = await prisma.siswa.findUnique({
+    where: { id: siswaIdInt },
+    include: { guru: true },
+  });
+
   try {
     const siswa = await prisma.siswa.findUnique({
       where: { id: siswaIdInt },
@@ -224,5 +230,183 @@ export const getLaporanMingguan = async (req, res) => {
   } catch (err) {
     console.error("Gagal ambil laporan mingguan:", err);
     res.status(500).json({ message: "Gagal ambil laporan mingguan" });
+  }
+};
+
+//Konsep Bulanan
+export const getRekapBulanan = async (req, res) => {
+  const { siswaId } = req.query;
+
+  const siswaIdInt = parseInt(siswaId);
+  if (isNaN(siswaIdInt)) {
+    return res.status(400).json({ message: "siswaId tidak valid" });
+  }
+
+  try {
+    const siswa = await prisma.siswa.findUnique({
+      where: { id: siswaIdInt },
+    });
+
+    const data = await prisma.nilai.findMany({
+      where: { id_siswa: siswaIdInt },
+      include: {
+        modul: true,
+        pembelajaran: true,
+      },
+    });
+
+    const grouped = data.reduce((acc, curr) => {
+      const modulId = curr.id_modul;
+      const month = new Date(curr.createdAt).getMonth() + 1; // bulan 1-12
+
+      const key = `${modulId}-${month}`;
+      if (!acc[key]) {
+        acc[key] = {
+          bulan: month,
+          modul: curr.modul?.topik || "Tidak diketahui",
+          kegiatanList: [],
+          jumlah: 0,
+          total: 0,
+        };
+      }
+
+      acc[key].kegiatanList.push({
+        nama: curr.pembelajaran?.kegiatan || "-",
+        nilai: curr.nilai,
+      });
+
+      acc[key].jumlah += 1;
+      acc[key].total += curr.nilai;
+
+      return acc;
+    }, {});
+
+    const rekap = Object.values(grouped).map((item) => ({
+      ...item,
+      rataRata: parseFloat((item.total / item.jumlah).toFixed(1)),
+    }));
+
+    res.json({ siswa, rekap });
+  } catch (err) {
+    console.error("Gagal ambil rekap bulanan:", err);
+    res.status(500).json({ message: "Gagal ambil rekap bulanan" });
+  }
+};
+
+export const getDetailRekapBulanan = async (req, res) => {
+  const { siswaId } = req.query;
+
+  const siswaIdInt = parseInt(siswaId);
+  if (isNaN(siswaIdInt)) {
+    return res.status(400).json({ message: "siswaId tidak valid" });
+  }
+
+  try {
+    const data = await prisma.nilai.findMany({
+      where: { id_siswa: siswaIdInt },
+      include: {
+        modul: true,
+        pembelajaran: true,
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    const grouped = data.reduce((acc, curr) => {
+      const modulId = curr.id_modul;
+      const bulanKe = new Date(curr.createdAt).getMonth() + 1;
+
+      const key = `${modulId}-${bulanKe}`;
+      if (!acc[key]) {
+        acc[key] = {
+          bulanKe,
+          modul: curr.modul?.topik || "Tidak diketahui",
+          jumlah: 0,
+          total: 0,
+          kegiatanList: [],
+        };
+      }
+
+      acc[key].jumlah += 1;
+      acc[key].total += curr.nilai;
+      acc[key].kegiatanList.push({
+        nama: curr.pembelajaran?.kegiatan || "-",
+        nilai: curr.nilai,
+      });
+
+      return acc;
+    }, {});
+
+    const result = Object.values(grouped).map((item) => ({
+      ...item,
+      rataRata: parseFloat((item.total / item.jumlah).toFixed(1)),
+    }));
+
+    res.json(result);
+  } catch (err) {
+    console.error("Gagal ambil detail rekap bulanan:", err);
+    res.status(500).json({ message: "Gagal ambil detail rekap bulanan" });
+  }
+};
+
+export const getLaporanBulanan = async (req, res) => {
+  const { siswaId } = req.query;
+
+  const siswaIdInt = parseInt(siswaId);
+  if (isNaN(siswaIdInt)) {
+    return res.status(400).json({ message: "siswaId tidak valid" });
+  }
+
+  try {
+    const siswa = await prisma.siswa.findUnique({
+      where: { id: siswaIdInt },
+      include: {
+        guru: true, // untuk wali kelas & NUPTK
+      },
+    });
+
+    const data = await prisma.nilai.findMany({
+      where: { id_siswa: siswaIdInt },
+      include: {
+        modul: true,
+        pembelajaran: true,
+      },
+      orderBy: { createdAt: "asc" },
+    });
+
+    const grouped = data.reduce((acc, curr) => {
+      const modulId = curr.id_modul;
+      const bulanKe = new Date(curr.createdAt).getMonth() + 1;
+      const key = `${modulId}-${bulanKe}`;
+
+      if (!acc[key]) {
+        acc[key] = {
+          bulanKe,
+          modul: curr.modul?.topik || "Tidak diketahui",
+          kegiatan: curr.pembelajaran?.kegiatan || "-",
+          jumlah: 0,
+          total: 0,
+          kegiatanList: [],
+        };
+      }
+
+      acc[key].jumlah += 1;
+      acc[key].total += curr.nilai;
+      acc[key].kegiatanList.push({
+        nama: curr.pembelajaran?.kegiatan || "-",
+        nilai: curr.nilai,
+      });
+
+      return acc;
+    }, {});
+
+    const rekap = Object.values(grouped).map((item) => ({
+      ...item,
+      rataRata: parseFloat((item.total / item.jumlah).toFixed(1)),
+    }));
+
+    res.json({ siswa, rekap });
+  } catch (err) {
+    console.error("Gagal ambil laporan bulanan:", err);
+    res.status(500).json({ message: "Gagal ambil laporan bulanan" });
   }
 };
