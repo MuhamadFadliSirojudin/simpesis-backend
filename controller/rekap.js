@@ -175,6 +175,9 @@ export const getLaporanMingguan = async (req, res) => {
   try {
     const siswa = await prisma.siswa.findUnique({
       where: { id: siswaIdInt },
+      include: {
+        guru: true,
+      },
     });
 
     const data = await prisma.nilai.findMany({
