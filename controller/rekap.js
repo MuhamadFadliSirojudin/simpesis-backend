@@ -235,6 +235,65 @@ export const getLaporanMingguan = async (req, res) => {
 
 //Konsep Bulanan
 export const getRekapBulanan = async (req, res) => {
+  try {
+    // Ambil semua nilai dan mapping ke bulan
+    const nilai = await prisma.nilai.findMany({
+      select: {
+        id: true,
+        id_siswa: true,
+        nilai: true,
+        createdAt: true,
+      },
+    });
+
+    // Kelompokkan berdasarkan id_siswa dan bulan
+    const grouped = nilai.reduce((acc, curr) => {
+      const month = new Date(curr.createdAt).getMonth() + 1; // 1-12
+      const key = `${curr.id_siswa}-${month}`;
+
+      if (!acc[key]) {
+        acc[key] = {
+          id_siswa: curr.id_siswa,
+          bulan: month,
+          jumlah: 0,
+          total: 0,
+        };
+      }
+
+      acc[key].jumlah += 1;
+      acc[key].total += curr.nilai;
+      return acc;
+    }, {});
+
+    // Ambil semua id siswa unik
+    const siswaIds = [...new Set(Object.values(grouped).map((g) => g.id_siswa))];
+
+    // Ambil data siswa
+    const siswaData = await prisma.siswa.findMany({
+      where: { id: { in: siswaIds } },
+      select: { id: true, nama: true },
+    });
+
+    // Format hasil akhir
+    const result = Object.values(grouped).map((g) => {
+      const siswa = siswaData.find((s) => s.id === g.id_siswa);
+      return {
+        id_siswa: g.id_siswa,
+        nama_siswa: siswa?.nama || "Tidak diketahui",
+        bulan: g.bulan,
+        jumlah_nilai: g.jumlah,
+        rata_rata: parseFloat((g.total / g.jumlah).toFixed(1)),
+      };
+    });
+
+    res.json(result);
+  } catch (error) {
+    console.error("Gagal mengambil rekap bulanan:", error);
+    res.status(500).json({ message: "Gagal mengambil rekap bulanan" });
+  }
+};
+
+export const getRekapBulananBySiswa = async (req, res) => {
   const { siswaId } = req.query;
 
   const siswaIdInt = parseInt(siswaId);
@@ -293,7 +352,7 @@ export const getRekapBulanan = async (req, res) => {
   }
 };
 
-export const getDetailRekapBulanan = async (req, res) => {
+export const getDetailRekapBulananBySiswa = async (req, res) => {
   const { siswaId } = req.query;
 
   const siswaIdInt = parseInt(siswaId);
