@@ -8,7 +8,6 @@ export const getRekapHarian = async (req, res) => {
       select: {
         id: true,
         id_siswa: true,
-        modul: true,
         nilai: true,
         createdAt: true,
       },
@@ -40,7 +39,7 @@ export const getRekapHarian = async (req, res) => {
     // Ambil data siswa
     const siswaData = await prisma.siswa.findMany({
       where: { id: { in: siswaIds } },
-      select: { id: true, nama: true, modul: true },
+      select: { id: true, nama: true },
     });
 
     // Format hasil akhir
@@ -49,7 +48,6 @@ export const getRekapHarian = async (req, res) => {
       return {
         id_siswa: g.id_siswa,
         nama_siswa: siswa?.nama || "Tidak diketahui",
-        modul: modul?.topik || modul?.nama || "Tidak diketahui",
         tanggal: g.tanggal,
         jumlah_nilai: g.jumlah,
         rata_rata: parseFloat((g.total / g.jumlah).toFixed(1)),
