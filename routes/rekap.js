@@ -1,5 +1,9 @@
 import express from "express";
-import { 
+import {
+    getRekapHarian,
+    getRekapHarianBySiswa,
+    getDetailRekapHarianBySiswa,
+    getLaporanHarian, 
     getRekapMingguan,
     getRekapMingguanBySiswa,
     getDetailRekapMingguanBySiswa,
@@ -16,6 +20,10 @@ import {
 
 const router = express.Router();
 
+router.get("/rekap/harian", getRekapHarian);
+router.get("/rekap/harian-by-siswa", getRekapHarianBySiswa);
+router.get("/rekap/harian-detail-by-siswa", getDetailRekapHarianBySiswa);
+router.get("/rekap/harian-laporan", getLaporanHarian);
 router.get("/rekap/mingguan", getRekapMingguan);
 router.get("/rekap/mingguan-by-siswa", getRekapMingguanBySiswa);
 router.get("/rekap/mingguan-detail-by-siswa", getDetailRekapMingguanBySiswa);

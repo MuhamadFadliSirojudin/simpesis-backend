@@ -1,5 +1,255 @@
 import prisma from "../lib/db.js";
 
+//Konsep Harian
+export const getRekapHarian = async (req, res) => {
+  try {
+    // Ambil semua nilai dan mapping ke tanggal
+    const nilai = await prisma.nilai.findMany({
+      select: {
+        id: true,
+        id_siswa: true,
+        nilai: true,
+        createdAt: true,
+      },
+    });
+
+    // Kelompokkan berdasarkan id_siswa dan tanggal
+    const grouped = nilai.reduce((acc, curr) => {
+      const tanggal = curr.createdAt.toISOString().split("T")[0]; // format YYYY-MM-DD
+      const key = `${curr.id_siswa}-${tanggal}`;
+
+      if (!acc[key]) {
+        acc[key] = {
+          id_siswa: curr.id_siswa,
+          tanggal,
+          jumlah: 0,
+          total: 0,
+        };
+      }
+
+      acc[key].jumlah += 1;
+      acc[key].total += curr.nilai;
+
+      return acc;
+    }, {});
+
+    // Ambil semua id siswa unik
+    const siswaIds = [...new Set(Object.values(grouped).map((g) => g.id_siswa))];
+
+    // Ambil data siswa
+    const siswaData = await prisma.siswa.findMany({
+      where: { id: { in: siswaIds } },
+      select: { id: true, nama: true },
+    });
+
+    // Format hasil akhir
+    const result = Object.values(grouped).map((g) => {
+      const siswa = siswaData.find((s) => s.id === g.id_siswa);
+      return {
+        id_siswa: g.id_siswa,
+        nama_siswa: siswa?.nama || "Tidak diketahui",
+        tanggal: g.tanggal,
+        jumlah_nilai: g.jumlah,
+        rata_rata: parseFloat((g.total / g.jumlah).toFixed(1)),
+      };
+    });
+
+    res.json(result);
+  } catch (error) {
+    console.error("Gagal mengambil rekap harian:", error);
+    res.status(500).json({ message: "Gagal mengambil rekap harian" });
+  }
+};
+
+export const getRekapHarianBySiswa = async (req, res) => {
+  const { siswaId } = req.query;
+
+  const siswaIdInt = parseInt(siswaId);
+  if (isNaN(siswaIdInt)) {
+    return res.status(400).json({ message: "siswaId wajib diisi dengan angka yang valid" });
+  }
+
+  try {
+    const nilaiData = await prisma.nilai.findMany({
+      where: {
+        id_siswa: siswaIdInt,
+      },
+      include: {
+        modul: true,
+        pembelajaran: true,
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+
+    const grouped = {};
+
+    for (const item of nilaiData) {
+      const tanggal = item.createdAt.toISOString().split("T")[0]; // format: YYYY-MM-DD
+      const modulId = item.id_modul;
+      const key = `${modulId}-${tanggal}`;
+
+      if (!grouped[key]) {
+        grouped[key] = {
+          tanggal,
+          modul: item.modul?.topik || item.modul?.nama || "Tidak diketahui",
+          kegiatanList: [],
+          jumlah: 0,
+          total: 0,
+        };
+      }
+
+      grouped[key].jumlah += 1;
+      grouped[key].total += item.nilai;
+
+      if (item.pembelajaran?.nama) {
+        grouped[key].kegiatanList.push({
+          nama: item.pembelajaran.nama,
+          nilai: item.nilai,
+        });
+      }
+    }
+
+    const result = Object.values(grouped).map((item) => ({
+      tanggal: item.tanggal,
+      modul: item.modul,
+      kegiatanList: item.kegiatanList,
+      jumlah: item.jumlah,
+      rataRata: parseFloat((item.total / item.jumlah).toFixed(1)),
+    }));
+
+    res.json(result);
+  } catch (error) {
+    console.error("Gagal mengambil rekap harian per siswa:", error);
+    res.status(500).json({ message: "Gagal mengambil rekap harian per siswa" });
+  }
+};
+
+export const getDetailRekapHarianBySiswa = async (req, res) => {
+  const { siswaId } = req.query;
+
+  const siswaIdInt = parseInt(siswaId);
+  if (isNaN(siswaIdInt)) {
+    return res.status(400).json({ message: "siswaId wajib diisi dengan angka yang valid" });
+  }
+
+  try {
+    const nilaiData = await prisma.nilai.findMany({
+      where: {
+        id_siswa: siswaIdInt,
+      },
+      include: {
+        modul: true,
+        pembelajaran: true,
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+
+    const grouped = {};
+
+    for (const item of nilaiData) {
+      const tanggal = item.createdAt.toISOString().split("T")[0]; // format YYYY-MM-DD
+      const modul = item.modul?.topik || item.modul?.nama || "-";
+      const key = `${tanggal}-${modul}`;
+
+      if (!grouped[key]) {
+        grouped[key] = {
+          tanggal,
+          modul,
+          jumlah: 0,
+          totalNilai: 0,
+          kegiatanList: [],
+        };
+      }
+
+      grouped[key].jumlah++;
+      grouped[key].totalNilai += item.nilai;
+      grouped[key].kegiatanList.push({
+        nama: item.pembelajaran?.nama || "-",
+        nilai: item.nilai,
+      });
+    }
+
+    const result = Object.values(grouped).map((item) => ({
+      tanggal: item.tanggal,
+      modul: item.modul,
+      jumlah: item.jumlah,
+      rataRata: parseFloat((item.totalNilai / item.jumlah).toFixed(1)),
+      kegiatanList: item.kegiatanList,
+    }));
+
+    res.json(result);
+  } catch (error) {
+    console.error("Gagal mengambil detail rekap harian:", error);
+    res.status(500).json({ message: "Gagal mengambil detail rekap harian" });
+  }
+};
+
+export const getLaporanHarian = async (req, res) => {
+  const { siswaId } = req.query;
+
+  const siswaIdInt = parseInt(siswaId);
+  if (isNaN(siswaIdInt)) {
+    return res.status(400).json({ message: "siswaId tidak valid" });
+  }
+
+  try {
+    const siswa = await prisma.siswa.findUnique({
+      where: { id: siswaIdInt },
+      include: { guru: true },
+    });
+
+    const data = await prisma.nilai.findMany({
+      where: { id_siswa: siswaIdInt },
+      include: {
+        modul: true,
+        pembelajaran: true,
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+
+    // Grouping berdasarkan modul dan tanggal (harian)
+    const grouped = {};
+
+    data.forEach((item) => {
+      const tanggal = item.createdAt.toISOString().split("T")[0]; // format: YYYY-MM-DD
+      const key = `${item.id_modul}-${tanggal}`;
+
+      if (!grouped[key]) {
+        grouped[key] = {
+          tanggal,
+          modul: item.modul?.topik || "Tidak diketahui",
+          jumlah: 0,
+          total: 0,
+          kegiatanList: [],
+        };
+      }
+
+      grouped[key].jumlah += 1;
+      grouped[key].total += item.nilai;
+      grouped[key].kegiatanList.push({
+        nama: item.pembelajaran?.nama || "-",
+        nilai: item.nilai,
+      });
+    });
+
+    const rekap = Object.values(grouped).map((item) => ({
+      ...item,
+      rataRata: parseFloat((item.total / item.jumlah).toFixed(1)),
+    }));
+
+    res.json({ siswa, rekap });
+  } catch (err) {
+    console.error("Gagal ambil laporan harian:", err);
+    res.status(500).json({ message: "Gagal ambil laporan harian" });
+  }
+};
+
 //Konsep Mingguan
 export const getRekapMingguan = async (req, res) => {
   try {
