@@ -298,57 +298,63 @@ export const getRekapBulananBySiswa = async (req, res) => {
 
   const siswaIdInt = parseInt(siswaId);
   if (isNaN(siswaIdInt)) {
-    return res.status(400).json({ message: "siswaId tidak valid" });
+    return res.status(400).json({ message: "siswaId wajib diisi dengan angka yang valid" });
   }
 
   try {
-    const siswa = await prisma.siswa.findUnique({
-      where: { id: siswaIdInt },
-    });
-
-    const data = await prisma.nilai.findMany({
-      where: { id_siswa: siswaIdInt },
+    const nilaiData = await prisma.nilai.findMany({
+      where: {
+        id_siswa: siswaIdInt,
+      },
       include: {
         modul: true,
         pembelajaran: true,
       },
+      orderBy: {
+        createdAt: "asc",
+      },
     });
 
-    const grouped = data.reduce((acc, curr) => {
-      const modulId = curr.id_modul;
-      const month = new Date(curr.createdAt).getMonth() + 1; // bulan 1-12
+    const grouped = {};
 
-      const key = `${modulId}-${month}`;
-      if (!acc[key]) {
-        acc[key] = {
-          bulan: month,
-          modul: curr.modul?.topik || "Tidak diketahui",
+    for (const item of nilaiData) {
+      const bulan = new Date(item.createdAt).getMonth() + 1; // 1-12
+      const modulId = item.id_modul;
+      const key = `${modulId}-${bulan}`;
+
+      if (!grouped[key]) {
+        grouped[key] = {
+          bulan,
+          modul: item.modul?.topik || item.modul?.nama || "Tidak diketahui",
           kegiatanList: [],
           jumlah: 0,
           total: 0,
         };
       }
 
-      acc[key].kegiatanList.push({
-        nama: curr.pembelajaran?.kegiatan || "-",
-        nilai: curr.nilai,
-      });
+      if (item.pembelajaran?.nama) {
+        grouped[key].kegiatanList.push({
+          nama: item.pembelajaran.nama,
+          nilai: item.nilai,
+        });
+      }
 
-      acc[key].jumlah += 1;
-      acc[key].total += curr.nilai;
+      grouped[key].jumlah += 1;
+      grouped[key].total += item.nilai;
+    }
 
-      return acc;
-    }, {});
-
-    const rekap = Object.values(grouped).map((item) => ({
-      ...item,
+    const result = Object.values(grouped).map((item) => ({
+      bulan: item.bulan,
+      modul: item.modul,
+      kegiatanList: item.kegiatanList,
+      jumlah: item.jumlah,
       rataRata: parseFloat((item.total / item.jumlah).toFixed(1)),
     }));
 
-    res.json({ siswa, rekap });
-  } catch (err) {
-    console.error("Gagal ambil rekap bulanan:", err);
-    res.status(500).json({ message: "Gagal ambil rekap bulanan" });
+    res.json(result);
+  } catch (error) {
+    console.error("Gagal mengambil rekap bulanan per siswa:", error);
+    res.status(500).json({ message: "Gagal mengambil rekap bulanan per siswa" });
   }
 };
 
