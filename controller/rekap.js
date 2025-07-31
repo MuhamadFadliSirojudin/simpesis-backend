@@ -8,6 +8,7 @@ export const getRekapHarian = async (req, res) => {
       select: {
         id: true,
         id_siswa: true,
+        modul: true,
         nilai: true,
         createdAt: true,
       },
@@ -48,6 +49,7 @@ export const getRekapHarian = async (req, res) => {
       return {
         id_siswa: g.id_siswa,
         nama_siswa: siswa?.nama || "Tidak diketahui",
+        modul: item.modul?.topik || item.modul?.nama || "Tidak diketahui",
         tanggal: g.tanggal,
         jumlah_nilai: g.jumlah,
         rata_rata: parseFloat((g.total / g.jumlah).toFixed(1)),
