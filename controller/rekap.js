@@ -424,9 +424,7 @@ export const getLaporanBulanan = async (req, res) => {
   try {
     const siswa = await prisma.siswa.findUnique({
       where: { id: siswaIdInt },
-      include: {
-        guru: true, // untuk wali kelas & NUPTK
-      },
+      include: { guru: true },
     });
 
     const data = await prisma.nilai.findMany({
@@ -435,34 +433,34 @@ export const getLaporanBulanan = async (req, res) => {
         modul: true,
         pembelajaran: true,
       },
-      orderBy: { createdAt: "asc" },
+      orderBy: {
+        createdAt: "asc",
+      },
     });
 
-    const grouped = data.reduce((acc, curr) => {
-      const modulId = curr.id_modul;
-      const bulanKe = new Date(curr.createdAt).getMonth() + 1;
-      const key = `${modulId}-${bulanKe}`;
+    // Grouping berdasarkan modul dan bulan
+    const grouped = {};
 
-      if (!acc[key]) {
-        acc[key] = {
-          bulanKe,
-          modul: curr.modul?.topik || "Tidak diketahui",
-          kegiatan: curr.pembelajaran?.kegiatan || "-",
+    data.forEach((item) => {
+      const bulan = new Date(item.createdAt).getMonth() + 1; // Januari = 1
+      const key = `${item.id_modul}-${bulan}`;
+      if (!grouped[key]) {
+        grouped[key] = {
+          bulan,
+          modul: item.modul?.topik || "Tidak diketahui",
           jumlah: 0,
           total: 0,
           kegiatanList: [],
         };
       }
 
-      acc[key].jumlah += 1;
-      acc[key].total += curr.nilai;
-      acc[key].kegiatanList.push({
-        nama: curr.pembelajaran?.kegiatan || "-",
-        nilai: curr.nilai,
+      grouped[key].jumlah += 1;
+      grouped[key].total += item.nilai;
+      grouped[key].kegiatanList.push({
+        nama: item.pembelajaran?.nama || "-",
+        nilai: item.nilai,
       });
-
-      return acc;
-    }, {});
+    });
 
     const rekap = Object.values(grouped).map((item) => ({
       ...item,
