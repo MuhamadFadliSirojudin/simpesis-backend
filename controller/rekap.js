@@ -4,6 +4,11 @@ import prisma from "../lib/db.js";
 export const getRekapHarian = async (req, res) => {
   try {
     const nilai = await prisma.nilai.findMany({
+      where: {
+        modul: {
+          isNot: null,
+        },
+      },
       select: {
         id: true,
         id_siswa: true,
