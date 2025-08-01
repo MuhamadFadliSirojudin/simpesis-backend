@@ -235,6 +235,7 @@ export const getLaporanHarian = async (req, res) => {
 
     const rekap = Object.values(grouped).map((item) => ({
       ...item,
+      jumlah_nilai: item.total,
       rataRata: parseFloat((item.total / item.jumlah).toFixed(1)),
     }));
 
