@@ -225,7 +225,7 @@ export const getLaporanHarian = async (req, res) => {
         };
       }
 
-      grouped[key].jumlah += 1;
+      grouped[key].jumlah += item.nilai;
       grouped[key].total += item.nilai;
       grouped[key].kegiatanList.push({
         nama: item.pembelajaran?.nama || "-",
