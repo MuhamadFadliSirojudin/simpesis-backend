@@ -3,7 +3,6 @@ import prisma from "../lib/db.js";
 //Konsep Harian
 export const getRekapHarian = async (req, res) => {
   try {
-    // Ambil semua nilai dan mapping ke tanggal
     const nilai = await prisma.nilai.findMany({
       select: {
         id: true,
@@ -20,9 +19,8 @@ export const getRekapHarian = async (req, res) => {
       },
     });
 
-    // Kelompokkan berdasarkan id_siswa dan tanggal
     const grouped = nilai.reduce((acc, curr) => {
-      const tanggal = curr.createdAt.toISOString().split("T")[0]; // format YYYY-MM-DD
+      const tanggal = curr.createdAt.toISOString().split("T")[0]; // YYYY-MM-DD
       const key = `${curr.id_siswa}-${tanggal}-${curr.id_modul}`;
 
       if (!acc[key]) {
@@ -41,16 +39,13 @@ export const getRekapHarian = async (req, res) => {
       return acc;
     }, {});
 
-    // Ambil semua id siswa unik
     const siswaIds = [...new Set(Object.values(grouped).map((g) => g.id_siswa))];
 
-    // Ambil data siswa
     const siswaData = await prisma.siswa.findMany({
       where: { id: { in: siswaIds } },
       select: { id: true, nama: true },
     });
 
-    // Format hasil akhir
     const result = Object.values(grouped).map((g) => {
       const siswa = siswaData.find((s) => s.id === g.id_siswa);
       return {
@@ -240,7 +235,7 @@ export const getLaporanHarian = async (req, res) => {
       }
 
       grouped[key].jumlah += 1;
-      grouped[key].total += item.total;
+      grouped[key].total += item.nilai;
       grouped[key].kegiatanList.push({
         nama: item.pembelajaran?.nama || "-",
         nilai: item.nilai,
