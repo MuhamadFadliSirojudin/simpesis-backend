@@ -10,18 +10,26 @@ export const getRekapHarian = async (req, res) => {
         id_siswa: true,
         nilai: true,
         createdAt: true,
+        id_modul: true,
+        modul: {
+          select: {
+            topik: true,
+            nama: true,
+          },
+        },
       },
     });
 
     // Kelompokkan berdasarkan id_siswa dan tanggal
     const grouped = nilai.reduce((acc, curr) => {
       const tanggal = curr.createdAt.toISOString().split("T")[0]; // format YYYY-MM-DD
-      const key = `${curr.id_siswa}-${tanggal}`;
+      const key = `${curr.id_siswa}-${tanggal}-${curr.id_modul}`;
 
       if (!acc[key]) {
         acc[key] = {
           id_siswa: curr.id_siswa,
           tanggal,
+          modul: curr.modul?.topik || curr.modul?.nama || "Tidak diketahui",
           jumlah: 0,
           total: 0,
         };
@@ -49,6 +57,7 @@ export const getRekapHarian = async (req, res) => {
         id_siswa: g.id_siswa,
         nama_siswa: siswa?.nama || "Tidak diketahui",
         tanggal: g.tanggal,
+        modul: g.modul,
         jumlah_nilai: g.total,
         rata_rata: parseFloat((g.total / g.jumlah).toFixed(1)),
       };
@@ -231,7 +240,7 @@ export const getLaporanHarian = async (req, res) => {
       }
 
       grouped[key].jumlah += 1;
-      grouped[key].total += item.nilai;
+      grouped[key].total += item.total;
       grouped[key].kegiatanList.push({
         nama: item.pembelajaran?.nama || "-",
         nilai: item.nilai,
