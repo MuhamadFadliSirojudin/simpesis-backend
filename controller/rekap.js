@@ -218,7 +218,7 @@ export const getLaporanHarian = async (req, res) => {
       if (!grouped[key]) {
         grouped[key] = {
           tanggal,
-          modul: item.modul?.topik || "Tidak diketahui",
+          modul: item.modul?.topik || item.modul?.nama || "Tidak diketahui",
           jumlah: 0,
           total: 0,
           kegiatanList: [],
@@ -235,7 +235,7 @@ export const getLaporanHarian = async (req, res) => {
 
     const rekap = Object.values(grouped).map((item) => ({
       ...item,
-      jumlah_nilai: item.total,
+      jumlah_nilai: item.total, // jumlah nilai = total nilai semua kegiatan
       rataRata: parseFloat((item.total / item.jumlah).toFixed(1)),
     }));
 
