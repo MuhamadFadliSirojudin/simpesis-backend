@@ -49,7 +49,7 @@ export const getRekapHarian = async (req, res) => {
         id_siswa: g.id_siswa,
         nama_siswa: siswa?.nama || "Tidak diketahui",
         tanggal: g.tanggal,
-        jumlah_nilai: g.jumlah,
+        jumlah_nilai: g.total,
         rata_rata: parseFloat((g.total / g.jumlah).toFixed(1)),
       };
     });
@@ -115,7 +115,7 @@ export const getRekapHarianBySiswa = async (req, res) => {
       tanggal: item.tanggal,
       modul: item.modul,
       kegiatanList: item.kegiatanList,
-      jumlah: item.jumlah,
+      jumlah: item.total,
       rataRata: parseFloat((item.total / item.jumlah).toFixed(1)),
     }));
 
@@ -176,7 +176,7 @@ export const getDetailRekapHarianBySiswa = async (req, res) => {
     const result = Object.values(grouped).map((item) => ({
       tanggal: item.tanggal,
       modul: item.modul,
-      jumlah: item.jumlah,
+      jumlah: item.totalNilai,
       rataRata: parseFloat((item.totalNilai / item.jumlah).toFixed(1)),
       kegiatanList: item.kegiatanList,
     }));
