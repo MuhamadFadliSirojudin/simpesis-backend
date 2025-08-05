@@ -271,8 +271,8 @@ export const getRekapMingguan = async (req, res) => {
       return {
         id_siswa: d.id_siswa,
         nama_siswa: siswa?.nama || "Tidak diketahui",
-        jumlah_nilai: d._count.id,
-        rata_rata: parseFloat((d._avg.nilai ?? 0).toFixed(1)),
+        jumlah_nilai: g.total,
+        rata_rata: parseFloat((g.total / g.jumlah).toFixed(1)),
       };
     });
 
@@ -471,7 +471,8 @@ export const getLaporanMingguan = async (req, res) => {
     const rekap = Object.values(grouped).map((item) => ({
       ...item,
       jumlah_nilai: item.total,
-      rataRata: parseFloat((item.total / item.jumlah).toFixed(1)),
+      rataRata: parseFloat((item.total / item.jumlahKegiatan).toFixed(1)),
+      kegiatanList: item.kegiatanList,
     }));
 
     res.json({ siswa, rekap });
@@ -714,7 +715,8 @@ export const getLaporanBulanan = async (req, res) => {
     const rekap = Object.values(grouped).map((item) => ({
       ...item,
       jumlah_nilai: item.total,
-      rataRata: parseFloat((item.total / item.jumlah).toFixed(1)),
+      rataRata: parseFloat((item.total / item.jumlahKegiatan).toFixed(1)),
+      kegiatanList: item.kegiatanList,
     }));
 
     res.json({ siswa, rekap });
@@ -962,7 +964,8 @@ export const getLaporanSemester = async (req, res) => {
     const rekap = Object.values(grouped).map((item) => ({
       ...item,
       jumlah_nilai: item.total,
-      rataRata: parseFloat((item.total / item.jumlah).toFixed(1)),
+      rataRata: parseFloat((item.total / item.jumlahKegiatan).toFixed(1)),
+      kegiatanList: item.kegiatanList,
     }));
 
     res.json({ siswa, rekap });
