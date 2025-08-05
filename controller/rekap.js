@@ -10,16 +10,21 @@ export const getRekapHarian = async (req, res) => {
         nilai: true,
         createdAt: true,
       },
+      include: {
+        modul: true,
+      }
     });
 
     const grouped = nilai.reduce((acc, curr) => {
       const tanggal = curr.createdAt.toISOString().split("T")[0]; // YYYY-MM-DD
+      const modulId = item.id_modul;
       const key = `${curr.id_siswa}-${tanggal}`;
 
       if (!acc[key]) {
         acc[key] = {
           id_siswa: curr.id_siswa,
           tanggal,
+          modul: item.modul?.topik || item.modul?.nama || "Tidak diketahui",
           jumlah: 0,
           total: 0,
         };
@@ -43,6 +48,7 @@ export const getRekapHarian = async (req, res) => {
       return {
         id_siswa: g.id_siswa,
         nama_siswa: siswa?.nama || "Tidak diketahui",
+        modul: item.modul,
         tanggal: g.tanggal,
         jumlah_nilai: g.total,
         rata_rata: parseFloat((g.total / g.jumlah).toFixed(1)),
