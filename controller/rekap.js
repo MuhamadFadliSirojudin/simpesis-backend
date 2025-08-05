@@ -225,7 +225,7 @@ export const getLaporanHarian = async (req, res) => {
         };
       }
 
-      grouped[key].jumlah += item.nilai;
+      grouped[key].jumlah += item.total;
       grouped[key].total += item.nilai;
       grouped[key].kegiatanList.push({
         nama: item.pembelajaran?.nama || "-",
@@ -337,7 +337,7 @@ export const getRekapMingguanBySiswa = async (req, res) => {
         mingguKe,
         modul: d.modulNama,
         kegiatan: [...d.kegiatanSet].join(", ") || "-",
-        jumlah: d.jumlah,
+        jumlah: d.totalNilai,
         rataRata: parseFloat((d.totalNilai / d.jumlah).toFixed(1)),
       };
     });
@@ -399,7 +399,7 @@ export const getDetailRekapMingguanBySiswa = async (req, res) => {
     const result = Object.values(grouped).map((item) => ({
       mingguKe: item.mingguKe,
       modul: item.modul,
-      jumlah: item.jumlah,
+      jumlah: item.totalNilai,
       rataRata: parseFloat((item.totalNilai / item.jumlah).toFixed(1)),
       kegiatanList: item.kegiatanList,
     }));
@@ -469,6 +469,7 @@ export const getLaporanMingguan = async (req, res) => {
 
     const rekap = Object.values(grouped).map((item) => ({
       ...item,
+      jumlah_nilai: item.total,
       rataRata: parseFloat((item.total / item.jumlah).toFixed(1)),
     }));
 
@@ -527,7 +528,7 @@ export const getRekapBulanan = async (req, res) => {
         id_siswa: g.id_siswa,
         nama_siswa: siswa?.nama || "Tidak diketahui",
         bulan: g.bulan,
-        jumlah_nilai: g.jumlah,
+        jumlah_nilai: g.total,
         rata_rata: parseFloat((g.total / g.jumlah).toFixed(1)),
       };
     });
@@ -593,7 +594,7 @@ export const getRekapBulananBySiswa = async (req, res) => {
       bulan: item.bulan,
       modul: item.modul,
       kegiatanList: item.kegiatanList,
-      jumlah: item.jumlah,
+      jumlah: item.total,
       rataRata: parseFloat((item.total / item.jumlah).toFixed(1)),
     }));
 
@@ -649,6 +650,7 @@ export const getDetailRekapBulananBySiswa = async (req, res) => {
 
     const result = Object.values(grouped).map((item) => ({
       ...item,
+      jumlah_nilai: item.total,
       rataRata: parseFloat((item.total / item.jumlah).toFixed(1)),
     }));
 
@@ -710,6 +712,7 @@ export const getLaporanBulanan = async (req, res) => {
 
     const rekap = Object.values(grouped).map((item) => ({
       ...item,
+      jumlah_nilai: item.total,
       rataRata: parseFloat((item.total / item.jumlah).toFixed(1)),
     }));
 
@@ -769,7 +772,7 @@ export const getRekapSemester = async (req, res) => {
         id_siswa: g.id_siswa,
         nama_siswa: siswa?.nama || "Tidak diketahui",
         semester: g.semester,
-        jumlah_nilai: g.jumlah,
+        jumlah_nilai: g.total,
         rata_rata: parseFloat((g.total / g.jumlah).toFixed(1)),
       };
     });
@@ -836,7 +839,7 @@ export const getRekapSemesterBySiswa = async (req, res) => {
       semester: item.semester,
       modul: item.modul,
       kegiatanList: item.kegiatanList,
-      jumlah: item.jumlah,
+      jumlah: item.total,
       rataRata: parseFloat((item.total / item.jumlah).toFixed(1)),
     }));
 
@@ -893,6 +896,7 @@ export const getDetailRekapSemesterBySiswa = async (req, res) => {
 
     const result = Object.values(grouped).map((item) => ({
       ...item,
+      jumlah_nilai: item.total,
       rataRata: parseFloat((item.total / item.jumlah).toFixed(1)),
     }));
 
@@ -956,6 +960,7 @@ export const getLaporanSemester = async (req, res) => {
 
     const rekap = Object.values(grouped).map((item) => ({
       ...item,
+      jumlah_nilai: item.total,
       rataRata: parseFloat((item.total / item.jumlah).toFixed(1)),
     }));
 
