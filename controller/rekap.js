@@ -208,22 +208,23 @@ export const getLaporanHarian = async (req, res) => {
       },
     });
 
-    // Grouping berdasarkan modul dan tanggal (harian)
     const grouped = {};
 
     data.forEach((item) => {
-      const tanggal = item.createdAt.toISOString().split("T")[0]; // format: YYYY-MM-DD
+      const tanggal = item.createdAt.toISOString().split("T")[0];
       const key = `${item.id_modul}-${tanggal}`;
 
       if (!grouped[key]) {
         grouped[key] = {
           tanggal,
           modul: item.modul?.topik || item.modul?.nama || "Tidak diketahui",
+          jumlahKegiatan: 0,
           totalNilai: 0,
           kegiatanList: [],
         };
       }
 
+      grouped[key].jumlahKegiatan += 1;
       grouped[key].totalNilai += item.nilai;
       grouped[key].kegiatanList.push({
         nama: item.pembelajaran?.nama || "-",
@@ -234,9 +235,8 @@ export const getLaporanHarian = async (req, res) => {
     const rekap = Object.values(grouped).map((item) => ({
       tanggal: item.tanggal,
       modul: item.modul,
-      jumlah: item.kegiatanList.length,
-      jumlahNilai: item.totalNilai,
-      rataRata: parseFloat((item.totalNilai / item.kegiatanList.length).toFixed(1)),
+      jumlah: item.totalNilai, // jumlah nilai total semua kegiatan
+      rataRata: parseFloat((item.totalNilai / item.jumlahKegiatan).toFixed(1)),
       kegiatanList: item.kegiatanList,
     }));
 
