@@ -18,7 +18,7 @@ export const getRekapHarian = async (req, res) => {
     const grouped = nilai.reduce((acc, curr) => {
       const tanggal = curr.createdAt.toISOString().split("T")[0]; // YYYY-MM-DD
       const modulId = item.id_modul;
-      const key = `${curr.id_siswa}-${tanggal}`;
+      const key = `${curr.id_siswa}-${tanggal}-${modulId}`;
 
       if (!acc[key]) {
         acc[key] = {
