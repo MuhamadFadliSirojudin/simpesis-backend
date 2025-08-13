@@ -18,8 +18,8 @@ router.delete("/:id", deleteModulById);
 
 router.patch("/:id", updateModulById);
 
-router.put("/modul/:id", updateModul);
+router.put("/:id", updateModul);
 
-router.get("/modul/:id", getModulById)
+router.get("/:id", getModulById)
 
 export default router;
