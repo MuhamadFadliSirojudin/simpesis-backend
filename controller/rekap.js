@@ -739,8 +739,13 @@ export const getLaporanBulanan = async (req, res) => {
       });
     });
 
+    const namaBulan = [
+      "", "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+      "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+    ];
+
     const rekap = Object.values(grouped).map((item) => ({
-      bulan: item.bulan ?? 0,
+      bulan: namaBulan[item.bulan] ?? "Tidak diketahui", // kirim string nama bulan
       modul: item.modul ?? "Tidak diketahui",
       jumlah: item.totalNilai ?? 0,
       rataRata: item.jumlahKegiatan > 0
