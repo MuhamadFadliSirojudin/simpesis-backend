@@ -478,14 +478,14 @@ export const getLaporanMingguan = async (req, res) => {
         grouped[key] = {
           mingguKe,
           modul: item.modul?.topik || "Tidak diketahui",
-          jumlah: 0,
-          total: 0,
+          jumlahKegiatan: 0,
+          totalNilai: 0,
           kegiatanList: [],
         };
       }
 
-      grouped[key].jumlah += 1;
-      grouped[key].total += item.nilai;
+      grouped[key].jumlahKegiatan += 1;
+      grouped[key].totalNilai += item.nilai;
       grouped[key].kegiatanList.push({
         nama: item.pembelajaran?.nama || "-",
         nilai: item.nilai,
@@ -725,14 +725,14 @@ export const getLaporanBulanan = async (req, res) => {
         grouped[key] = {
           bulan,
           modul: item.modul?.topik || "Tidak diketahui",
-          jumlah: 0,
-          total: 0,
+          jumlahKegiatan: 0,
+          totalNilai: 0,
           kegiatanList: [],
         };
       }
 
-      grouped[key].jumlah += 1;
-      grouped[key].total += item.nilai;
+      grouped[key].jumlahKegiatan += 1;
+      grouped[key].totalNilai += item.nilai;
       grouped[key].kegiatanList.push({
         nama: item.pembelajaran?.nama || "-",
         nilai: item.nilai,
@@ -740,10 +740,13 @@ export const getLaporanBulanan = async (req, res) => {
     });
 
     const rekap = Object.values(grouped).map((item) => ({
-      ...item,
-      jumlah_nilai: item.total,
-      rataRata: parseFloat((item.total / item.jumlahKegiatan).toFixed(1)),
-      kegiatanList: item.kegiatanList,
+      bulanKe: item.bulanKe ?? 0,
+      modul: item.modul ?? "Tidak diketahui",
+      jumlah: item.totalNilai ?? 0,
+      rataRata: item.jumlahKegiatan > 0
+        ? parseFloat((item.totalNilai / item.jumlahKegiatan).toFixed(1))
+        : 0,
+      kegiatanList: item.kegiatanList ?? [],
     }));
 
     res.json({ siswa, rekap });
@@ -974,14 +977,14 @@ export const getLaporanSemester = async (req, res) => {
         grouped[key] = {
           semester,
           modul: item.modul?.topik || item.modul?.nama || "Tidak diketahui",
-          jumlah: 0,
-          total: 0,
+          jumlahKegiatan: 0,
+          totalNilai: 0,
           kegiatanList: [],
         };
       }
 
-      grouped[key].jumlah += 1;
-      grouped[key].total += item.nilai;
+      grouped[key].jumlahKegiatan += 1;
+      grouped[key].totalNilai += item.nilai;
       grouped[key].kegiatanList.push({
         nama: item.pembelajaran?.nama || item.pembelajaran?.kegiatan || "-",
         nilai: item.nilai,
@@ -989,10 +992,13 @@ export const getLaporanSemester = async (req, res) => {
     });
 
     const rekap = Object.values(grouped).map((item) => ({
-      ...item,
-      jumlah_nilai: item.total,
-      rataRata: parseFloat((item.total / item.jumlahKegiatan).toFixed(1)),
-      kegiatanList: item.kegiatanList,
+      semester: item.semester ?? 0,
+      modul: item.modul ?? "Tidak diketahui",
+      jumlah: item.totalNilai ?? 0,
+      rataRata: item.jumlahKegiatan > 0
+        ? parseFloat((item.totalNilai / item.jumlahKegiatan).toFixed(1))
+        : 0,
+      kegiatanList: item.kegiatanList ?? [],
     }));
 
     res.json({ siswa, rekap });
