@@ -265,7 +265,7 @@ export const getRekapMingguan = async (req, res) => {
       const diffInDays = Math.floor((date - startOfYear) / (1000 * 60 * 60 * 24));
       const mingguKe = Math.ceil((diffInDays + 1) / 7); // +1 biar minggu pertama dimulai dari hari pertama
 
-      const key = `${curr.id_siswa}-${mingguKe}`;
+      const key = `${curr.id_siswa}`;
 
       if (!acc[key]) {
         acc[key] = {
