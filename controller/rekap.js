@@ -444,17 +444,10 @@ export const getLaporanMingguan = async (req, res) => {
     return res.status(400).json({ message: "siswaId tidak valid" });
   }
 
-  const siswa = await prisma.siswa.findUnique({
-    where: { id: siswaIdInt },
-    include: { guru: true },
-  });
-
   try {
     const siswa = await prisma.siswa.findUnique({
       where: { id: siswaIdInt },
-      include: {
-        guru: true,
-      },
+      include: { guru: true },
     });
 
     const data = await prisma.nilai.findMany({
@@ -468,24 +461,28 @@ export const getLaporanMingguan = async (req, res) => {
       },
     });
 
-    // Grouping berdasarkan modul dan minggu
     const grouped = {};
 
     data.forEach((item) => {
-      const mingguKe = Math.ceil(new Date(item.createdAt).getDate() / 7);
+      const date = new Date(item.createdAt);
+      const startOfYear = new Date(date.getFullYear(), 0, 1);
+      const diffInDays = Math.floor((date - startOfYear) / (1000 * 60 * 60 * 24));
+      const mingguKe = Math.ceil((diffInDays + 1) / 7); // minggu ke dari awal tahun
+
       const key = `${item.id_modul}-${mingguKe}`;
+
       if (!grouped[key]) {
         grouped[key] = {
           mingguKe,
-          modul: item.modul?.topik || "Tidak diketahui",
-          jumlah: 0,
-          total: 0,
+          modul: item.modul?.topik || item.modul?.nama || "Tidak diketahui",
+          jumlahKegiatan: 0,
+          totalNilai: 0,
           kegiatanList: [],
         };
       }
 
-      grouped[key].jumlah += 1;
-      grouped[key].total += item.nilai;
+      grouped[key].jumlahKegiatan += 1;
+      grouped[key].totalNilai += item.nilai;
       grouped[key].kegiatanList.push({
         nama: item.pembelajaran?.nama || "-",
         nilai: item.nilai,
@@ -493,9 +490,10 @@ export const getLaporanMingguan = async (req, res) => {
     });
 
     const rekap = Object.values(grouped).map((item) => ({
-      ...item,
-      jumlah_nilai: item.total,
-      rataRata: parseFloat((item.total / item.jumlahKegiatan).toFixed(1)),
+      minggu_ke: item.mingguKe,
+      modul: item.modul,
+      jumlah: item.totalNilai, // jumlah nilai total semua kegiatan
+      rataRata: parseFloat((item.totalNilai / item.jumlahKegiatan).toFixed(1)),
       kegiatanList: item.kegiatanList,
     }));
 
