@@ -103,7 +103,7 @@ export const updateModul = async (req, res) => {
         topik,
         waliKelas,
         nuptk,
-        tujuanPembelajaran,
+        tujuan,
       },
     });
 
