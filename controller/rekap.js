@@ -250,27 +250,51 @@ export const getLaporanHarian = async (req, res) => {
 //Konsep Mingguan
 export const getRekapMingguan = async (req, res) => {
   try {
-    const data = await prisma.nilai.groupBy({
-      by: ["id_siswa"],
-      _count: { id: true },
-      _avg: { nilai: true },
-    });
-
-    const siswaData = await prisma.siswa.findMany({
-      where: {
-        id: { in: data.map((d) => d.id_siswa) },
-      },
+    const nilai = await prisma.nilai.findMany({
       select: {
         id: true,
-        nama: true,
+        id_siswa: true,
+        nilai: true,
+        createdAt: true,
       },
     });
 
-    const result = data.map((d) => {
-      const siswa = siswaData.find((s) => s.id === d.id_siswa);
+    const grouped = nilai.reduce((acc, curr) => {
+      const date = new Date(curr.createdAt);
+      const startOfYear = new Date(date.getFullYear(), 0, 1);
+      const diffInDays = Math.floor((date - startOfYear) / (1000 * 60 * 60 * 24));
+      const mingguKe = Math.ceil((diffInDays + 1) / 7); // +1 biar minggu pertama dimulai dari hari pertama
+
+      const key = `${curr.id_siswa}-${mingguKe}`;
+
+      if (!acc[key]) {
+        acc[key] = {
+          id_siswa: curr.id_siswa,
+          minggu_ke: mingguKe,
+          jumlah: 0,
+          total: 0,
+        };
+      }
+
+      acc[key].jumlah += 1;
+      acc[key].total += curr.nilai;
+
+      return acc;
+    }, {});
+
+    const siswaIds = [...new Set(Object.values(grouped).map((g) => g.id_siswa))];
+
+    const siswaData = await prisma.siswa.findMany({
+      where: { id: { in: siswaIds } },
+      select: { id: true, nama: true },
+    });
+
+    const result = Object.values(grouped).map((g) => {
+      const siswa = siswaData.find((s) => s.id === g.id_siswa);
       return {
-        id_siswa: d.id_siswa,
+        id_siswa: g.id_siswa,
         nama_siswa: siswa?.nama || "Tidak diketahui",
+        minggu_ke: g.minggu_ke,
         jumlah_nilai: g.total,
         rata_rata: parseFloat((g.total / g.jumlah).toFixed(1)),
       };
