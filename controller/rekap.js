@@ -490,11 +490,13 @@ export const getLaporanMingguan = async (req, res) => {
     });
 
     const rekap = Object.values(grouped).map((item) => ({
-      minggu_ke: item.mingguKe,
-      modul: item.modul,
-      jumlah: item.totalNilai, // jumlah nilai total semua kegiatan
-      rataRata: parseFloat((item.totalNilai / item.jumlahKegiatan).toFixed(1)),
-      kegiatanList: item.kegiatanList,
+      minggu_ke: item.mingguKe ?? 0, // default 0 kalau undefined
+      modul: item.modul ?? "Tidak diketahui",
+      jumlah: item.totalNilai ?? 0,
+      rataRata: item.jumlahKegiatan > 0
+        ? parseFloat((item.totalNilai / item.jumlahKegiatan).toFixed(1))
+        : 0,
+      kegiatanList: item.kegiatanList ?? [],
     }));
 
     res.json({ siswa, rekap });
