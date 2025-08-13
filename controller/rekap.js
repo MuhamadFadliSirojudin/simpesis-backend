@@ -740,7 +740,7 @@ export const getLaporanBulanan = async (req, res) => {
     });
 
     const rekap = Object.values(grouped).map((item) => ({
-      bulanKe: item.bulanKe ?? 0,
+      bulan: item.bulan ?? 0,
       modul: item.modul ?? "Tidak diketahui",
       jumlah: item.totalNilai ?? 0,
       rataRata: item.jumlahKegiatan > 0
