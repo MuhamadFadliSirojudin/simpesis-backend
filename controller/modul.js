@@ -85,3 +85,56 @@ export const updateModulById = async (req, res) => {
       .json({ error: "Terjadi kesalahan saat mengambil data modul." });
   }
 };
+
+// Update Modul
+export const updateModul = async (req, res) => {
+  const { id } = req.params;
+  const { topik, waliKelas, nuptk, tujuanPembelajaran } = req.body;
+
+  const idInt = parseInt(id);
+  if (isNaN(idInt)) {
+    return res.status(400).json({ message: "ID modul tidak valid" });
+  }
+
+  try {
+    const modul = await prisma.modul.update({
+      where: { id: idInt },
+      data: {
+        topik,
+        waliKelas,
+        nuptk,
+        tujuanPembelajaran,
+      },
+    });
+
+    res.json({ message: "Modul berhasil diperbarui", data: modul });
+  } catch (error) {
+    console.error("Gagal update modul:", error);
+    res.status(500).json({ message: "Gagal update modul" });
+  }
+};
+
+// Ambil Modul berdasarkan ID
+export const getModulById = async (req, res) => {
+  const { id } = req.params;
+
+  const idInt = parseInt(id);
+  if (isNaN(idInt)) {
+    return res.status(400).json({ message: "ID modul tidak valid" });
+  }
+
+  try {
+    const modul = await prisma.modul.findUnique({
+      where: { id: idInt },
+    });
+
+    if (!modul) {
+      return res.status(404).json({ message: "Modul tidak ditemukan" });
+    }
+
+    res.json({ message: "Data modul ditemukan", data: modul });
+  } catch (error) {
+    console.error("Gagal ambil modul:", error);
+    res.status(500).json({ message: "Gagal ambil modul" });
+  }
+};

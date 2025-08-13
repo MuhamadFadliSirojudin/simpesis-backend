@@ -4,6 +4,8 @@ import {
   getAllModul,
   updateModulById,
   deleteModulById,
+  updateModul,
+  getModulById,
 } from "../controller/modul.js";
 
 const router = express.Router();
@@ -15,5 +17,9 @@ router.get("/", getAllModul);
 router.delete("/:id", deleteModulById);
 
 router.patch("/:id", updateModulById);
+
+router.put("/modul/:id", updateModul);
+
+router.get("/modul/:id", getModulById)
 
 export default router;
