@@ -444,15 +444,18 @@ export const getLaporanMingguan = async (req, res) => {
     return res.status(400).json({ message: "siswaId tidak valid" });
   }
 
+  const siswa = await prisma.siswa.findUnique({
+    where: { id: siswaIdInt },
+    include: { guru: true },
+  });
+
   try {
     const siswa = await prisma.siswa.findUnique({
       where: { id: siswaIdInt },
-      include: { guru: true },
+      include: {
+        guru: true,
+      },
     });
-
-    if (!siswa) {
-      return res.status(404).json({ message: "Data siswa tidak ditemukan" });
-    }
 
     const data = await prisma.nilai.findMany({
       where: { id_siswa: siswaIdInt },
@@ -465,28 +468,24 @@ export const getLaporanMingguan = async (req, res) => {
       },
     });
 
+    // Grouping berdasarkan modul dan minggu
     const grouped = {};
 
     data.forEach((item) => {
-      const date = new Date(item.createdAt);
-      const startOfYear = new Date(date.getFullYear(), 0, 1);
-      const diffInDays = Math.floor((date - startOfYear) / (1000 * 60 * 60 * 24));
-      const mingguKe = Math.ceil((diffInDays + 1) / 7); // minggu ke dari awal tahun
-
+      const mingguKe = Math.ceil(new Date(item.createdAt).getDate() / 7);
       const key = `${item.id_modul}-${mingguKe}`;
-
       if (!grouped[key]) {
         grouped[key] = {
-          mingguKe, // camelCase
-          modul: item.modul?.topik || item.modul?.nama || "Tidak diketahui",
-          jumlahKegiatan: 0,
-          totalNilai: 0,
+          mingguKe,
+          modul: item.modul?.topik || "Tidak diketahui",
+          jumlah: 0,
+          total: 0,
           kegiatanList: [],
         };
       }
 
-      grouped[key].jumlahKegiatan += 1;
-      grouped[key].totalNilai += item.nilai;
+      grouped[key].jumlah += 1;
+      grouped[key].total += item.nilai;
       grouped[key].kegiatanList.push({
         nama: item.pembelajaran?.nama || "-",
         nilai: item.nilai,
@@ -705,10 +704,6 @@ export const getLaporanBulanan = async (req, res) => {
       include: { guru: true },
     });
 
-    if (!siswa) {
-      return res.status(404).json({ message: "Data siswa tidak ditemukan" });
-    }
-
     const data = await prisma.nilai.findMany({
       where: { id_siswa: siswaIdInt },
       include: {
@@ -720,26 +715,24 @@ export const getLaporanBulanan = async (req, res) => {
       },
     });
 
+    // Grouping berdasarkan modul dan bulan
     const grouped = {};
 
     data.forEach((item) => {
-      const date = new Date(item.createdAt);
-      const bulanKe = date.getMonth() + 1; // 1 = Januari, 12 = Desember
-
-      const key = `${item.id_modul}-${bulanKe}`;
-
+      const bulan = new Date(item.createdAt).getMonth() + 1; // Januari = 1
+      const key = `${item.id_modul}-${bulan}`;
       if (!grouped[key]) {
         grouped[key] = {
-          bulanKe,
-          modul: item.modul?.topik || item.modul?.nama || "Tidak diketahui",
-          jumlahKegiatan: 0,
-          totalNilai: 0,
+          bulan,
+          modul: item.modul?.topik || "Tidak diketahui",
+          jumlah: 0,
+          total: 0,
           kegiatanList: [],
         };
       }
 
-      grouped[key].jumlahKegiatan += 1;
-      grouped[key].totalNilai += item.nilai;
+      grouped[key].jumlah += 1;
+      grouped[key].total += item.nilai;
       grouped[key].kegiatanList.push({
         nama: item.pembelajaran?.nama || "-",
         nilai: item.nilai,
@@ -747,13 +740,10 @@ export const getLaporanBulanan = async (req, res) => {
     });
 
     const rekap = Object.values(grouped).map((item) => ({
-      bulanKe: item.bulanKe ?? 0,
-      modul: item.modul ?? "Tidak diketahui",
-      jumlah: item.totalNilai ?? 0,
-      rataRata: item.jumlahKegiatan > 0
-        ? parseFloat((item.totalNilai / item.jumlahKegiatan).toFixed(1))
-        : 0,
-      kegiatanList: item.kegiatanList ?? [],
+      ...item,
+      jumlah_nilai: item.total,
+      rataRata: parseFloat((item.total / item.jumlahKegiatan).toFixed(1)),
+      kegiatanList: item.kegiatanList,
     }));
 
     res.json({ siswa, rekap });
@@ -948,81 +938,66 @@ export const getDetailRekapSemesterBySiswa = async (req, res) => {
 };
 
 export const getLaporanSemester = async (req, res) => {
+  const { siswaId } = req.query;
+
+  const siswaIdInt = parseInt(siswaId);
+  if (isNaN(siswaIdInt)) {
+    return res.status(400).json({ message: "siswaId tidak valid" });
+  }
+
   try {
-    const { siswaId } = req.query;
-
-    if (!siswaId) {
-      return res.status(400).json({ error: "Parameter siswaId diperlukan" });
-    }
-
-    // Ambil data nilai siswa + info modul + pembelajaran
-    const nilai = await prisma.nilai.findMany({
-      where: { id_siswa: parseInt(siswaId) },
-      select: {
-        nilai: true,
-        createdAt: true,
-        modul: { select: { nama: true } },
-        pembelajaran: { select: { nama: true } }
-      }
-    });
-
-    if (!nilai.length) {
-      return res.json({ siswa: null, rekap: [] });
-    }
-
-    // Ambil data siswa
     const siswa = await prisma.siswa.findUnique({
-      where: { id: parseInt(siswaId) },
-      select: { id: true, nama: true }
+      where: { id: siswaIdInt },
+      include: { guru: true },
     });
 
-    // Kelompokkan berdasarkan semester
-    const rekap = [];
-    const semesterMap = {};
+    const data = await prisma.nilai.findMany({
+      where: { id_siswa: siswaIdInt },
+      include: {
+        modul: true,
+        pembelajaran: true,
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
 
-    nilai.forEach((item) => {
-      const bulan = new Date(item.createdAt).getMonth() + 1; // 1–12
-      let semester;
+    // Grouping berdasarkan modul dan semester
+    const grouped = {};
 
-      if (bulan >= 7 && bulan <= 12) {
-        semester = "Semester 1 (Juli–Desember)";
-      } else {
-        semester = "Semester 2 (Januari–Juni)";
-      }
+    data.forEach((item) => {
+      const month = new Date(item.createdAt).getMonth() + 1;
+      const semester = month >= 7 ? 1 : 2; // Semester 1: Juli–Desember, Semester 2: Januari–Juni
+      const key = `${item.id_modul}-S${semester}`;
 
-      if (!semesterMap[semester]) {
-        semesterMap[semester] = {
+      if (!grouped[key]) {
+        grouped[key] = {
           semester,
-          kegiatan: [],
-          jumlahPenilaian: 0,
-          totalNilai: 0
+          modul: item.modul?.topik || item.modul?.nama || "Tidak diketahui",
+          jumlah: 0,
+          total: 0,
+          kegiatanList: [],
         };
       }
 
-      semesterMap[semester].kegiatan.push({
-        modul: item.modul?.nama || "-",
-        pembelajaran: item.pembelajaran?.nama || "-",
-        nilai: item.nilai
-      });
-
-      semesterMap[semester].jumlahPenilaian += 1;
-      semesterMap[semester].totalNilai += item.nilai;
-    });
-
-    // Hitung rata-rata
-    Object.values(semesterMap).forEach((data) => {
-      rekap.push({
-        semester: data.semester,
-        kegiatan: data.kegiatan,
-        jumlahPenilaian: data.jumlahPenilaian,
-        rataRata: data.totalNilai / data.jumlahPenilaian
+      grouped[key].jumlah += 1;
+      grouped[key].total += item.nilai;
+      grouped[key].kegiatanList.push({
+        nama: item.pembelajaran?.nama || item.pembelajaran?.kegiatan || "-",
+        nilai: item.nilai,
       });
     });
+
+    const rekap = Object.values(grouped).map((item) => ({
+      ...item,
+      jumlah_nilai: item.total,
+      rataRata: parseFloat((item.total / item.jumlahKegiatan).toFixed(1)),
+      kegiatanList: item.kegiatanList,
+    }));
 
     res.json({ siswa, rekap });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Terjadi kesalahan server" });
+  } catch (err) {
+    console.error("Gagal ambil laporan semester:", err);
+    res.status(500).json({ message: "Gagal ambil laporan semester" });
   }
 };
