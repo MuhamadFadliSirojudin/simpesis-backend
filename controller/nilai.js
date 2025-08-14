@@ -9,7 +9,7 @@ export const createNewNilai = async (req, res) => {
     }
 
     let insertedCount = 0;
-    let updatedCount = 0;
+    let skippedCount = 0;
 
     for (const item of data) {
       const { id_pembelajaran, id_siswa, id_modul, nilai, foto_karya } = item;
@@ -22,39 +22,31 @@ export const createNewNilai = async (req, res) => {
         },
       });
 
+      if (existing) {
+        skippedCount++;
+        continue;
+      }
+
       let bufferFoto = null;
       if (foto_karya && foto_karya.startsWith("data:")) {
         const base64String = foto_karya.replace(/^data:.*?;base64,/, "");
         bufferFoto = Buffer.from(base64String, "base64");
       }
 
-      if (existing) {
-        // Update nilai lama
-        await prisma.nilai.update({
-          where: { id: existing.id },
-          data: {
-            nilai,
-            ...(bufferFoto && { foto_karya: bufferFoto }),
-          },
-        });
-        updatedCount++;
-      } else {
-        // Insert nilai baru
-        await prisma.nilai.create({
-          data: {
-            id_pembelajaran,
-            id_siswa,
-            id_modul,
-            nilai,
-            foto_karya: bufferFoto,
-          },
-        });
-        insertedCount++;
-      }
+      await prisma.nilai.create({
+        data: {
+          id_pembelajaran,
+          id_siswa,
+          id_modul,
+          nilai,
+          foto_karya: bufferFoto,
+        },
+      });
+      insertedCount++;
     }
 
     return res.status(201).json({
-      message: `Berhasil menambah ${insertedCount} data baru dan memperbarui ${updatedCount} data`,
+      message: `Berhasil menambah ${insertedCount} kegiatan baru, ${skippedCount} kegiatan dilewati karena sudah ada`,
     });
   } catch (error) {
     console.log(error);
