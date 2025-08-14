@@ -3,35 +3,54 @@ import prisma from "../lib/db.js";
 export const createNewNilai = async (req, res) => {
   try {
     const { data } = req.body;
-    const { id_pembelajaran, id_siswa, id_modul } = data[0];
+    if (!Array.isArray(data) || data.length === 0) {
+      return res.status(400).json({ message: "Data nilai kosong" });
+    }
 
-    const nilaiExist = await prisma.nilai.findMany({
-      where: {
-        id_modul,
-        id_siswa,
-        id_pembelajaran,
-      },
-    });
+    let insertedCount = 0;
+    let updatedCount = 0;
 
-    if (nilaiExist.length !== 0)
-      return res
-        .status(409)
-        .json({ message: "data siswa dengan modul tersebut sudah ada" });
+    for (const item of data) {
+      const { id_pembelajaran, id_siswa, id_modul, nilai, foto_karya } = item;
 
-    const processed = data.map((item) => {
-      const base64String = item.foto_karya.replace(/^data:.*?;base64,/, "");
-      const buffer = Buffer.from(base64String, "base64");
+      const existing = await prisma.nilai.findFirst({
+        where: {
+          id_siswa,
+          id_modul,
+          id_pembelajaran,
+        },
+      });
 
-      return {
-        ...item,
-        foto_karya: buffer,
-      };
-    });
+      const base64String = foto_karya?.replace(/^data:.*?;base64,/, "");
+      const buffer = base64String ? Buffer.from(base64String, "base64") : null;
 
-    const newData = await prisma.nilai.createMany({ data: processed });
+      if (existing) {
+        // Kalau mau update nilai lama
+        await prisma.nilai.update({
+          where: { id: existing.id },
+          data: {
+            nilai,
+            ...(buffer && { foto_karya: buffer }),
+          },
+        });
+        updatedCount++;
+      } else {
+        // Insert kegiatan baru
+        await prisma.nilai.create({
+          data: {
+            id_siswa,
+            id_modul,
+            id_pembelajaran,
+            nilai,
+            foto_karya: buffer,
+          },
+        });
+        insertedCount++;
+      }
+    }
 
     return res.status(201).json({
-      message: `Berhasil menambah ${newData.count} data`,
+      message: `Berhasil menambah ${insertedCount} kegiatan baru dan memperbarui ${updatedCount} kegiatan`,
     });
   } catch (error) {
     console.log(error);
