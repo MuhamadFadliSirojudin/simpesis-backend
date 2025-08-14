@@ -45,6 +45,12 @@ export const createNewNilai = async (req, res) => {
       insertedCount++;
     }
 
+    if (insertedCount === 0 && skippedCount > 0) {
+      return res.status(409).json({
+        message: "Gagal menambah data. Semua kegiatan sudah memiliki nilai.",
+      });
+    }
+
     return res.status(201).json({
       message: `Berhasil menambah ${insertedCount} kegiatan baru, ${skippedCount} kegiatan dilewati karena sudah ada nilainya`,
     });
