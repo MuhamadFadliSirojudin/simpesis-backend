@@ -3,6 +3,7 @@ import prisma from "../lib/db.js";
 export const createNewNilai = async (req, res) => {
   try {
     const { data } = req.body;
+
     if (!Array.isArray(data) || data.length === 0) {
       return res.status(400).json({ message: "Data nilai kosong" });
     }
@@ -15,34 +16,37 @@ export const createNewNilai = async (req, res) => {
 
       const existing = await prisma.nilai.findFirst({
         where: {
-          id_siswa,
           id_modul,
+          id_siswa,
           id_pembelajaran,
         },
       });
 
-      const base64String = foto_karya?.replace(/^data:.*?;base64,/, "");
-      const buffer = base64String ? Buffer.from(base64String, "base64") : null;
+      let bufferFoto = null;
+      if (foto_karya && foto_karya.startsWith("data:")) {
+        const base64String = foto_karya.replace(/^data:.*?;base64,/, "");
+        bufferFoto = Buffer.from(base64String, "base64");
+      }
 
       if (existing) {
-        // Kalau mau update nilai lama
+        // Update nilai lama
         await prisma.nilai.update({
           where: { id: existing.id },
           data: {
             nilai,
-            ...(buffer && { foto_karya: buffer }),
+            ...(bufferFoto && { foto_karya: bufferFoto }),
           },
         });
         updatedCount++;
       } else {
-        // Insert kegiatan baru
+        // Insert nilai baru
         await prisma.nilai.create({
           data: {
+            id_pembelajaran,
             id_siswa,
             id_modul,
-            id_pembelajaran,
             nilai,
-            foto_karya: buffer,
+            foto_karya: bufferFoto,
           },
         });
         insertedCount++;
@@ -50,7 +54,7 @@ export const createNewNilai = async (req, res) => {
     }
 
     return res.status(201).json({
-      message: `Berhasil menambah ${insertedCount} kegiatan baru dan memperbarui ${updatedCount} kegiatan`,
+      message: `Berhasil menambah ${insertedCount} data baru dan memperbarui ${updatedCount} data`,
     });
   } catch (error) {
     console.log(error);
