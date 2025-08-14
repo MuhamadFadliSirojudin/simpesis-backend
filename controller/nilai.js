@@ -166,32 +166,20 @@ export const deleteNilaiById = async (req, res) => {
 
 // Ambil semua nilai berdasarkan ID siswa
 export const getNilaiBySiswa = async (req, res) => {
-  const { siswaId } = req.query;
-  const siswaIdint = parseInt(siswaId);
-  if (isNaN(siswaIdint)) {
+  const siswaId = parseInt(req.params.siswaId);
+  if (isNaN(siswaId)) {
     return res.status(400).json({ message: "ID siswa tidak valid" });
   }
 
   try {
     const nilai = await prisma.nilai.findMany({
-      where: { id_siswa: siswaIdint },
-      include: { 
-        pembelajaran: true,
-        modul: true 
-      },
-      orderBy: { createdAt: "asc" },
+      where: { id_siswa: siswaId },
+      include: { pembelajaran: true, modul: true },
+      orderBy: { createdAt: "desc" },
     });
-    
-    const baseUrl = `${req.protocol}://${req.get("host")}/uploads/`;
-
-    const hasil = data.map(item => ({
-      ...item,
-      foto_karya: item.foto_karya ? baseUrl + item.foto_karya : null
-    }));
-
-    res.json(hasil);
+    return res.status(200).json({ data: nilai });
   } catch (error) {
     console.error("Gagal mengambil nilai:", error);
-    res.status(500).json({ message: "Gagal mengambil nilai" });
+    return res.status(500).json({ message: "Gagal mengambil nilai" });
   }
 };

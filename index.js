@@ -1,6 +1,4 @@
 import express from "express";
-import path from "path";
-import { fileURLToPath } from "url";
 import * as bodyParser from "body-parser";
 import authRouter from "./routes/auth.js";
 import siswaRouter from "./routes/siswa.js";
@@ -13,12 +11,6 @@ import cors from "cors";
 import guruRouter from "./routes/guru.js";
 import adminRouter from "./routes/admin.js";
 import rekapRoutes from "./routes/rekap.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
 const app = express();
 
 app.use(cors());
