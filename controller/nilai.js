@@ -46,7 +46,7 @@ export const createNewNilai = async (req, res) => {
     }
 
     return res.status(201).json({
-      message: `Berhasil menambah ${insertedCount} kegiatan baru, ${skippedCount} kegiatan dilewati karena sudah ada`,
+      message: `Berhasil menambah ${insertedCount} kegiatan baru, ${skippedCount} kegiatan dilewati karena sudah ada nilainya`,
     });
   } catch (error) {
     console.log(error);
