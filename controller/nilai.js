@@ -120,30 +120,46 @@ export const deleteNilai = async (req, res) => {
   }
 };
 
-// Ambil nilai berdasarkan siswa dan tanggal 7 hari terakhir
-export const getRekapMingguanBySiswa = async (req, res) => {
-  const { siswaId } = req.params;
+export const updateNilaiById = async (req, res) => {
+  const id = parseInt(req.params.id);
+  const { nilai } = req.body;
+
+  if (isNaN(id)) {
+    return res.status(400).json({ message: "ID nilai tidak valid" });
+  }
 
   try {
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    const nilai = await prisma.nilai.findMany({
-      where: {
-        id_siswa: Number(siswaId),
-        createdAt: {
-          gte: sevenDaysAgo, // hanya ambil data 7 hari terakhir
-        },
-      },
-      include: {
-        modul: true,
-        pembelajaran: true,
-      },
+    const updated = await prisma.nilai.update({
+      where: { id },
+      data: { nilai },
     });
 
-    res.status(200).json({ data: nilai });
-  } catch (err) {
-    console.error("Rekap mingguan error:", err);
-    res.status(500).json({ error: "Gagal mengambil rekap mingguan" });
+    return res.status(200).json({
+      message: "Nilai berhasil diperbarui",
+      data: updated,
+    });
+  } catch (error) {
+    console.error("Gagal update nilai:", error);
+    return res.status(500).json({ message: "Gagal update nilai" });
+  }
+};
+
+// Hapus nilai per ID
+export const deleteNilaiById = async (req, res) => {
+  const id = parseInt(req.params.id);
+
+  if (isNaN(id)) {
+    return res.status(400).json({ message: "ID nilai tidak valid" });
+  }
+
+  try {
+    await prisma.nilai.delete({
+      where: { id },
+    });
+
+    return res.status(200).json({ message: "Nilai berhasil dihapus" });
+  } catch (error) {
+    console.error("Gagal hapus nilai:", error);
+    return res.status(500).json({ message: "Gagal hapus nilai" });
   }
 };

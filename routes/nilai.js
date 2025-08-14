@@ -3,7 +3,8 @@ import {
   createNewNilai,
   deleteNilai,
   getAllNilaiBySiswaId,
-  getRekapMingguanBySiswa
+  updateNilaiById,
+  deleteNilaiById
 } from "../controller/nilai.js";
 
 const router = express.Router();
@@ -14,6 +15,8 @@ router.delete("/", deleteNilai);
 
 router.get("/:siswaId", getAllNilaiBySiswaId);
 
-router.get("/rekap-mingguan/:siswaId", getRekapMingguanBySiswa);
+router.put("/:id", updateNilaiById);
+
+router.delete("/:id", deleteNilaiById);
 
 export default router;
