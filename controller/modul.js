@@ -89,7 +89,7 @@ export const updateModulById = async (req, res) => {
 // Update Modul
 export const updateModul = async (req, res) => {
   const { id } = req.params;
-  const { topik, waliKelas, nuptk, tujuanPembelajaran } = req.body;
+  const { topik, penyusun, nip, tujuan } = req.body;
 
   const idInt = parseInt(id);
   if (isNaN(idInt)) {
@@ -101,8 +101,8 @@ export const updateModul = async (req, res) => {
       where: { id: idInt },
       data: {
         topik,
-        waliKelas,
-        nuptk,
+        penyusun,
+        nip,
         tujuan,
       },
     });
