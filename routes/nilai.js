@@ -4,7 +4,8 @@ import {
   deleteNilai,
   getAllNilaiBySiswaId,
   updateNilaiById,
-  deleteNilaiById
+  deleteNilaiById,
+  getNilaiBySiswa
 } from "../controller/nilai.js";
 
 const router = express.Router();
@@ -18,5 +19,7 @@ router.get("/:siswaId", getAllNilaiBySiswaId);
 router.put("/:id", updateNilaiById);
 
 router.delete("/:id", deleteNilaiById);
+
+router.get("/by-siswa/:siswaId", getNilaiBySiswa);
 
 export default router;
