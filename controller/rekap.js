@@ -525,7 +525,7 @@ export const getRekapBulanan = async (req, res) => {
     // Kelompokkan berdasarkan id_siswa dan bulan
     const grouped = nilai.reduce((acc, curr) => {
       const month = new Date(curr.createdAt).getMonth() + 1; // 1-12
-      const key = `${curr.id_siswa}-${month}`;
+      const key = `${curr.id_siswa}`;
 
       if (!acc[key]) {
         acc[key] = {
@@ -778,7 +778,7 @@ export const getRekapSemester = async (req, res) => {
     const grouped = nilai.reduce((acc, curr) => {
       const month = new Date(curr.createdAt).getMonth() + 1; // 1-12
       const semester = month >= 7 ? 1 : 2; // Juli–Desember = Semester 1, Jan–Juni = Semester 2
-      const key = `${curr.id_siswa}-S${semester}`;
+      const key = `${curr.id_siswa}`;
 
       if (!acc[key]) {
         acc[key] = {
