@@ -138,3 +138,42 @@ export const getSiswaById = async (req, res) => {
   }
 };
 
+// ✅ Update siswa
+export const updateSiswa = async (req, res) => {
+  const { siswaId } = req.params;
+  const { nama, semester, kelompok, guruId } = req.body;
+
+  try {
+    // pastikan siswa memang ada dan milik guru yang login
+    const siswa = await prisma.siswa.findFirst({
+      where: {
+        id: Number(siswaId),
+        guruId: Number(guruId),
+      },
+    });
+
+    if (!siswa) {
+      return res
+        .status(404)
+        .json({ message: "Siswa tidak ditemukan atau bukan milik Anda" });
+    }
+
+    // update data
+    const updatedSiswa = await prisma.siswa.update({
+      where: { id: Number(siswaId) },
+      data: {
+        ...(nama && { nama }),
+        ...(semester && { semester: Number(semester) }),
+        ...(kelompok && { kelompok }),
+      },
+    });
+
+    return res.status(200).json({
+      message: "Berhasil memperbarui data siswa",
+      data: updatedSiswa,
+    });
+  } catch (error) {
+    console.error("❌ Error updateSiswa:", error);
+    return res.status(500).json({ message: "Gagal memperbarui data siswa" });
+  }
+};
