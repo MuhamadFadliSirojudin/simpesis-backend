@@ -52,7 +52,7 @@ export const getGuruKinerja = async (req, res) => {
       include: {
         siswa: {
           include: {
-            nilai: true,
+            nilai: true, // ambil nilai tiap siswa
           },
         },
       },
@@ -62,20 +62,25 @@ export const getGuruKinerja = async (req, res) => {
 
     const result = guruList.map((guru) => {
       const jumlahSiswa = guru.siswa.length;
-      const totalNilai = guru.siswa.reduce(
-        (sum, s) => sum + s.nilai.length,
-        0
-      );
+
+      // hitung total modul unik yang sudah dinilai per siswa
+      const totalNilai = guru.siswa.reduce((sum, s) => {
+        const modulUnik = new Set(s.nilai.map((n) => n.id_modul));
+        return sum + modulUnik.size;
+      }, 0);
+
       const targetNilai = jumlahSiswa * totalModul;
-      const progress =
-        targetNilai > 0 ? ((totalNilai / targetNilai) * 100).toFixed(1) : 0;
+      let progress = targetNilai > 0 ? (totalNilai / targetNilai) * 100 : 0;
+
+      // batasi agar tidak melebihi 100%
+      if (progress > 100) progress = 100;
 
       return {
         nama: guru.nama,
         jumlahSiswa,
         totalNilai,
         targetNilai,
-        progress,
+        progress: progress.toFixed(1),
       };
     });
 
